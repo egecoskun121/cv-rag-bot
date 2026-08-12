@@ -26,12 +26,10 @@ public class OllamaCircuitBreaker {
 
     private static final Logger log = LoggerFactory.getLogger(OllamaCircuitBreaker.class);
 
-    private enum State { CLOSED, OPEN, HALF_OPEN }
-
     private final int failureThreshold;
     private final long openWaitMs;
 
-    private State state = State.CLOSED;
+    private CircuitState state = CircuitState.CLOSED;
     private int consecutiveFailures = 0;
     private long openedAtMs = 0L;
 
@@ -43,9 +41,9 @@ public class OllamaCircuitBreaker {
 
     /** Call before performing the guarded operation. Throws if the circuit is OPEN. */
     public synchronized void acquire() {
-        if (state == State.OPEN) {
+        if (state == CircuitState.OPEN) {
             if (System.currentTimeMillis() - openedAtMs >= openWaitMs) {
-                state = State.HALF_OPEN;
+                state = CircuitState.HALF_OPEN;
                 log.info("Circuit HALF_OPEN — allowing a trial call");
             } else {
                 throw new CircuitOpenException(RagBotConstants.ERROR_AI_CIRCUIT_OPEN);
@@ -55,18 +53,18 @@ public class OllamaCircuitBreaker {
 
     /** Report a successful call — closes the circuit and resets the counter. */
     public synchronized void onSuccess() {
-        if (state != State.CLOSED) {
+        if (state != CircuitState.CLOSED) {
             log.info("Circuit CLOSED — dependency healthy again");
         }
-        state = State.CLOSED;
+        state = CircuitState.CLOSED;
         consecutiveFailures = 0;
     }
 
     /** Report a failed call — may open (or re-open) the circuit. */
     public synchronized void onFailure() {
         consecutiveFailures++;
-        if (state == State.HALF_OPEN || consecutiveFailures >= failureThreshold) {
-            state = State.OPEN;
+        if (state == CircuitState.HALF_OPEN || consecutiveFailures >= failureThreshold) {
+            state = CircuitState.OPEN;
             openedAtMs = System.currentTimeMillis();
             log.warn("Circuit OPEN after {} consecutive failures — failing fast for {} ms",
                     consecutiveFailures, openWaitMs);
