@@ -22,6 +22,9 @@ app:
       max-attempts: 3               # total tries for a transient failure (incl. the first)
       base-delay-ms: 300            # backoff base; grows exponentially per attempt
       max-delay-ms: 3000            # cap on a single backoff wait
+    circuit-breaker:
+      failure-threshold: 3          # consecutive failed operations before the circuit opens
+      open-wait-ms: 5000            # how long to stay OPEN before a half-open trial
   rag:
     # A one-page CV fits entirely in the LLM context, so we retrieve generously.
     # With English-centric nomic-embed-text, a Turkish query can rank the one

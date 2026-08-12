@@ -19,6 +19,7 @@ public final class RagBotConstants {
 
     // --- Error messages ---
     public static final String ERROR_AI_UNAVAILABLE = "AI service (Ollama) is unavailable. Make sure it is running.";
+    public static final String ERROR_AI_CIRCUIT_OPEN = "AI service is temporarily disabled after repeated failures. Please retry shortly.";
     public static final String ERROR_AI_BAD_RESPONSE = "AI service returned an invalid response.";
     public static final String ERROR_DATA_ACCESS = "Data store is unavailable.";
     public static final String ERROR_UNEXPECTED = "An unexpected error occurred.";

@@ -1,5 +1,6 @@
 package com.ege.cvrag.web;
 
+import com.ege.cvrag.circuitbreaker.CircuitOpenException;
 import com.ege.cvrag.constant.RagBotConstants;
 import com.ege.cvrag.model.ErrorResponse;
 import org.slf4j.Logger;
@@ -21,6 +22,13 @@ import org.springframework.web.client.RestClientException;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /** Circuit is open — failing fast after repeated failures. */
+    @ExceptionHandler(CircuitOpenException.class)
+    public ResponseEntity<ErrorResponse> handleCircuitOpen(CircuitOpenException ex) {
+        log.warn("Circuit open — rejecting call: {}", ex.getMessage());
+        return build(HttpStatus.SERVICE_UNAVAILABLE, RagBotConstants.ERROR_AI_CIRCUIT_OPEN);
+    }
 
     /** Ollama unreachable (connection refused / read timeout). */
     @ExceptionHandler(ResourceAccessException.class)
