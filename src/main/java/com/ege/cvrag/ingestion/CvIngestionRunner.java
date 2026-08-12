@@ -1,6 +1,8 @@
 package com.ege.cvrag.ingestion;
 
+import com.ege.cvrag.constant.RagBotConstants;
 import com.ege.cvrag.llm.OllamaClient;
+import com.ege.cvrag.model.CvSection;
 import com.ege.cvrag.vectorstore.PgVectorStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,10 +65,10 @@ public class CvIngestionRunner implements ApplicationRunner {
         }
 
         // 2. SPLIT by Markdown section (## / ###), keeping each heading with its body.
-        List<Section> sections = splitByMarkdownSection(text);
+        List<CvSection> sections = splitByMarkdownSection(text);
 
         // 3. EMBED each section and STORE it with its vector.
-        for (Section s : sections) {
+        for (CvSection s : sections) {
             float[] embedding = ollama.embed(s.body());
             vectorStore.save(s.body(), s.heading(), embedding);
         }
@@ -80,17 +82,18 @@ public class CvIngestionRunner implements ApplicationRunner {
      * heading with its body. The leading preamble (title + contact block, before
      * the first ## heading) becomes its own section.
      */
-    private List<Section> splitByMarkdownSection(String text) {
-        List<Section> sections = new ArrayList<>();
+    private List<CvSection> splitByMarkdownSection(String text) {
+        List<CvSection> sections = new ArrayList<>();
         String[] lines = text.split("\n", -1);
 
         StringBuilder buf = new StringBuilder();
-        String currentHeading = "Overview";
+        String currentHeading = RagBotConstants.DEFAULT_SECTION_HEADING;
 
         for (String line : lines) {
-            boolean isSection = line.startsWith("## ") || line.startsWith("### ");
+            boolean isSection = line.startsWith(RagBotConstants.MARKDOWN_H2_PREFIX)
+                    || line.startsWith(RagBotConstants.MARKDOWN_H3_PREFIX);
             if (isSection && !buf.toString().isBlank()) {
-                sections.add(new Section(currentHeading, buf.toString().strip()));
+                sections.add(new CvSection(currentHeading, buf.toString().strip()));
                 buf.setLength(0);
             }
             if (isSection) {
@@ -99,10 +102,8 @@ public class CvIngestionRunner implements ApplicationRunner {
             buf.append(line).append('\n');
         }
         if (!buf.toString().isBlank()) {
-            sections.add(new Section(currentHeading, buf.toString().strip()));
+            sections.add(new CvSection(currentHeading, buf.toString().strip()));
         }
         return sections;
     }
-
-    private record Section(String heading, String body) {}
 }

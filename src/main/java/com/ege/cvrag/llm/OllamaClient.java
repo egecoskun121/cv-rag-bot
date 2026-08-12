@@ -1,5 +1,12 @@
 package com.ege.cvrag.llm;
 
+import com.ege.cvrag.constant.RagBotConstants;
+import com.ege.cvrag.model.OllamaChatMessage;
+import com.ege.cvrag.model.OllamaChatOptions;
+import com.ege.cvrag.model.OllamaChatRequest;
+import com.ege.cvrag.model.OllamaChatResponse;
+import com.ege.cvrag.model.OllamaEmbeddingRequest;
+import com.ege.cvrag.model.OllamaEmbeddingResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -45,11 +52,11 @@ public class OllamaClient {
 
     /** Embeds a single piece of text into a vector (768 floats for nomic-embed-text). */
     public float[] embed(String text) {
-        EmbeddingResponse response = http.post()
-                .uri("/api/embeddings")
-                .body(new EmbeddingRequest(embedModel, text))
+        OllamaEmbeddingResponse response = http.post()
+                .uri(RagBotConstants.OLLAMA_EMBEDDINGS_ENDPOINT)
+                .body(new OllamaEmbeddingRequest(embedModel, text))
                 .retrieve()
-                .body(EmbeddingResponse.class);
+                .body(OllamaEmbeddingResponse.class);
         if (response == null || response.embedding() == null) {
             throw new IllegalStateException("Ollama returned no embedding for text: " + preview(text));
         }
@@ -58,16 +65,16 @@ public class OllamaClient {
 
     /** Runs a chat completion with a system instruction and a user message. */
     public String chat(String systemPrompt, String userPrompt) {
-        ChatResponse response = http.post()
-                .uri("/api/chat")
-                .body(new ChatRequest(
+        OllamaChatResponse response = http.post()
+                .uri(RagBotConstants.OLLAMA_CHAT_ENDPOINT)
+                .body(new OllamaChatRequest(
                         chatModel,
                         false, // stream=false -> get the whole answer in one response
-                        List.of(new Message("system", systemPrompt),
-                                new Message("user", userPrompt)),
-                        new Options(temperature)))
+                        List.of(new OllamaChatMessage(RagBotConstants.ROLE_SYSTEM, systemPrompt),
+                                new OllamaChatMessage(RagBotConstants.ROLE_USER, userPrompt)),
+                        new OllamaChatOptions(temperature)))
                 .retrieve()
-                .body(ChatResponse.class);
+                .body(OllamaChatResponse.class);
         if (response == null || response.message() == null) {
             throw new IllegalStateException("Ollama returned no chat message");
         }
@@ -77,18 +84,4 @@ public class OllamaClient {
     private static String preview(String s) {
         return s.length() <= 60 ? s : s.substring(0, 60) + "...";
     }
-
-    // --- Ollama request/response DTOs (JSON field names match the API) ---
-
-    private record EmbeddingRequest(String model, String prompt) {}
-
-    private record EmbeddingResponse(float[] embedding) {}
-
-    private record ChatRequest(String model, boolean stream, List<Message> messages, Options options) {}
-
-    private record Options(double temperature) {}
-
-    private record Message(String role, String content) {}
-
-    private record ChatResponse(Message message) {}
 }
