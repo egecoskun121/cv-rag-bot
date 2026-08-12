@@ -1,13 +1,13 @@
 package com.ege.cvrag.llm;
 
 import com.ege.cvrag.constant.RagBotConstants;
-import com.ege.cvrag.model.OllamaChatMessage;
-import com.ege.cvrag.model.OllamaChatOptions;
-import com.ege.cvrag.model.OllamaChatRequest;
-import com.ege.cvrag.model.OllamaChatResponse;
+import com.ege.cvrag.model.ollama.OllamaChatMessage;
+import com.ege.cvrag.model.ollama.OllamaChatOptions;
+import com.ege.cvrag.model.ollama.OllamaChatRequest;
+import com.ege.cvrag.model.ollama.OllamaChatResponse;
 import com.ege.cvrag.circuitbreaker.OllamaCircuitBreaker;
-import com.ege.cvrag.model.OllamaEmbeddingRequest;
-import com.ege.cvrag.model.OllamaEmbeddingResponse;
+import com.ege.cvrag.model.ollama.OllamaEmbeddingRequest;
+import com.ege.cvrag.model.ollama.OllamaEmbeddingResponse;
 import com.ege.cvrag.retry.RetryExecutor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;

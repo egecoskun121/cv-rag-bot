@@ -1,4 +1,4 @@
-package com.ege.cvrag.model;
+package com.ege.cvrag.model.ollama;
 
 import java.util.List;
 
