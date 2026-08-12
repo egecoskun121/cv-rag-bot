@@ -14,6 +14,8 @@ public final class RagBotConstants {
     // --- REST API ---
     public static final String API_V1 = "/api/v1";
     public static final String ASK_PATH = "/ask";
+    public static final String HEALTH_PATH = "/health";
+    public static final String STATUS_UP = "UP";
 
     // --- Ollama HTTP endpoints ---
     public static final String OLLAMA_EMBEDDINGS_ENDPOINT = "/api/embeddings";

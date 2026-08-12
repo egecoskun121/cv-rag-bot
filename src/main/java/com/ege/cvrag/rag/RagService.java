@@ -4,6 +4,8 @@ import com.ege.cvrag.constant.RagBotConstants;
 import com.ege.cvrag.llm.OllamaClient;
 import com.ege.cvrag.model.CvChunk;
 import com.ege.cvrag.vectorstore.PgVectorStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
 @Service
 public class RagService {
 
+    private static final Logger log = LoggerFactory.getLogger(RagService.class);
+
     private final OllamaClient ollama;
     private final PgVectorStore vectorStore;
     private final int topK;
@@ -36,11 +40,15 @@ public class RagService {
     }
 
     public String ask(String question) {
+        log.info("Answering question via RAG (topK={}): {}", topK, question);
+
         // 1. Embed the question (same model as indexing -> comparable vectors).
         float[] queryEmbedding = ollama.embed(question);
 
         // 2. Retrieve the most relevant CV chunks.
         List<CvChunk> hits = vectorStore.search(queryEmbedding, topK);
+        log.debug("Retrieved {} chunks: {}", hits.size(),
+                hits.stream().map(CvChunk::section).toList());
 
         // 3. Build the context block from the retrieved chunks.
         String context = hits.stream()
