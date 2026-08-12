@@ -1,4 +1,4 @@
-package com.ege.cvrag.model;
+package com.ege.cvrag.model.cv;
 
 /**
  * A retrieved CV chunk plus its similarity score to the query.

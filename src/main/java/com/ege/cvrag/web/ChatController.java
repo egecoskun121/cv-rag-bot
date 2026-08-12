@@ -1,8 +1,8 @@
 package com.ege.cvrag.web;
 
 import com.ege.cvrag.constant.RagBotConstants;
-import com.ege.cvrag.model.AskRequest;
-import com.ege.cvrag.model.AskResponse;
+import com.ege.cvrag.model.chat.AskRequest;
+import com.ege.cvrag.model.chat.AskResponse;
 import com.ege.cvrag.rag.RagService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

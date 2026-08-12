@@ -2,7 +2,7 @@ package com.ege.cvrag.ingestion;
 
 import com.ege.cvrag.constant.RagBotConstants;
 import com.ege.cvrag.llm.OllamaClient;
-import com.ege.cvrag.model.CvSection;
+import com.ege.cvrag.model.cv.CvSection;
 import com.ege.cvrag.vectorstore.PgVectorStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

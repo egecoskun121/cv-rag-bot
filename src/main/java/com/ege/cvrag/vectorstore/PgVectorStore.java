@@ -1,6 +1,6 @@
 package com.ege.cvrag.vectorstore;
 
-import com.ege.cvrag.model.CvChunk;
+import com.ege.cvrag.model.cv.CvChunk;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

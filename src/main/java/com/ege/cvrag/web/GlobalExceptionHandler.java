@@ -2,7 +2,7 @@ package com.ege.cvrag.web;
 
 import com.ege.cvrag.circuitbreaker.CircuitOpenException;
 import com.ege.cvrag.constant.RagBotConstants;
-import com.ege.cvrag.model.ErrorResponse;
+import com.ege.cvrag.model.common.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;

@@ -1,7 +1,7 @@
 package com.ege.cvrag.web;
 
 import com.ege.cvrag.constant.RagBotConstants;
-import com.ege.cvrag.model.HealthResponse;
+import com.ege.cvrag.model.common.HealthResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
