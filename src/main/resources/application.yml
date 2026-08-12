@@ -1,0 +1,39 @@
+server:
+  port: 8081   # 8080 başka bir uygulamada; gerekmiyorsa 8080'e çevirebilirsin
+
+spring:
+  application:
+    name: cv-rag-bot
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/ragdb
+    username: postgres
+    password: postgres
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      # Pull these once: `ollama pull llama3.2` and `ollama pull nomic-embed-text`
+      chat:
+        options:
+          model: qwen2.5:7b   # strong multilingual (incl. Turkish); pull: `ollama pull qwen2.5:7b`
+          temperature: 0.0   # deterministic answers over a fixed CV (no random refusals)
+      embedding:
+        options:
+          model: nomic-embed-text
+    vectorstore:
+      pgvector:
+        initialize-schema: true      # auto-creates the vector_store table + extension
+        dimensions: 768              # MUST match nomic-embed-text output dimension
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+
+# Re-ingest documents on every startup? Handy during development; set false in prod.
+app:
+  ingestion:
+    reload-on-startup: true
+    docs-location: classpath:/docs/cv.md
+
+logging:
+  level:
+    org.springframework.ai: INFO

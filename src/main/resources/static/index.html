@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CV RAG Bot</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, sans-serif; max-width: 680px; margin: 40px auto; padding: 0 16px; }
+    h1 { font-size: 1.4rem; }
+    .sub { color: #888; margin-top: -8px; }
+    #log { border: 1px solid #8883; border-radius: 10px; padding: 12px; min-height: 220px; margin: 16px 0; }
+    .msg { margin: 10px 0; padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; line-height: 1.45; }
+    .user { background: #3b82f622; }
+    .bot { background: #10b98122; }
+    .who { font-size: .75rem; color: #888; margin-bottom: 2px; }
+    form { display: flex; gap: 8px; }
+    input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #8886; background: transparent; color: inherit; }
+    button { padding: 10px 16px; border-radius: 8px; border: 0; background: #3b82f6; color: #fff; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+  </style>
+</head>
+<body>
+  <h1>💬 CV RAG Bot</h1>
+  <p class="sub">Spring AI + Ollama + pgvector — CV üzerinde kaynaklı soru-cevap</p>
+
+  <div id="log">
+    <div class="msg bot"><div class="who">bot</div>Merhaba! Ege'nin deneyimi, yetenekleri veya projeleri hakkında soru sorabilirsin.</div>
+  </div>
+
+  <form id="f">
+    <input id="q" placeholder="ör: Ege'nin Spring deneyimi ne?" autocomplete="off" required>
+    <button id="send" type="submit">Sor</button>
+  </form>
+
+  <script>
+    const log = document.getElementById('log');
+    const form = document.getElementById('f');
+    const input = document.getElementById('q');
+    const send = document.getElementById('send');
+
+    function add(text, who) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + (who === 'user' ? 'user' : 'bot');
+      div.innerHTML = '<div class="who">' + who + '</div>';
+      div.appendChild(document.createTextNode(text));
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      return div;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const question = input.value.trim();
+      if (!question) return;
+      add(question, 'user');
+      input.value = '';
+      send.disabled = true;
+      const thinking = add('…', 'bot');
+      try {
+        const res = await fetch('/api/v1/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json();
+        thinking.remove();
+        add(data.answer || '(boş yanıt)', 'bot');
+      } catch (err) {
+        thinking.remove();
+        add('Hata: ' + err.message, 'bot');
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>
