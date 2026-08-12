@@ -1,5 +1,11 @@
 # CV RAG Bot
 
+[![CI](https://github.com/egecoskun121/cv-rag-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/egecoskun121/cv-rag-bot/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/egecoskun121/cv-rag-bot/actions/workflows/codeql.yml/badge.svg)](https://github.com/egecoskun121/cv-rag-bot/actions/workflows/codeql.yml)
+[![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://adoptium.net/)
+[![Spring Boot 3.3](https://img.shields.io/badge/Spring%20Boot-3.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A small retrieval-augmented generation (RAG) service that answers questions about
 a CV, grounded in the document itself. It runs fully locally — no API keys — using
 Ollama for inference and Postgres/pgvector for similarity search.
@@ -68,3 +74,7 @@ chat/embedding models, `top-k`, and embedding dimensions. Replace
   low `top-k` retrieval reliable.
 - `app.ingestion.reload-on-startup` wipes and re-embeds on every boot; disable it
   for a persistent store.
+
+## License
+
+Released under the [MIT License](LICENSE).
