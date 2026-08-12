@@ -10,30 +10,27 @@ spring:
     username: postgres
     password: postgres
 
-  ai:
-    ollama:
-      base-url: http://localhost:11434
-      # Pull these once: `ollama pull llama3.2` and `ollama pull nomic-embed-text`
-      chat:
-        options:
-          model: qwen2.5:7b   # strong multilingual (incl. Turkish); pull: `ollama pull qwen2.5:7b`
-          temperature: 0.0   # deterministic answers over a fixed CV (no random refusals)
-      embedding:
-        options:
-          model: nomic-embed-text
-    vectorstore:
-      pgvector:
-        initialize-schema: true      # auto-creates the vector_store table + extension
-        dimensions: 768              # MUST match nomic-embed-text output dimension
-        index-type: HNSW
-        distance-type: COSINE_DISTANCE
-
-# Re-ingest documents on every startup? Handy during development; set false in prod.
+# Application config for the hand-rolled RAG pipeline.
 app:
+  ollama:
+    base-url: http://localhost:11434
+    chat-model: qwen2.5:7b          # pull: `ollama pull qwen2.5:7b`
+    embed-model: nomic-embed-text   # pull: `ollama pull nomic-embed-text`
+    temperature: 0.0                # deterministic answers over a fixed CV
+    read-timeout-seconds: 120       # LLM generation can take a while locally
+  rag:
+    # A one-page CV fits entirely in the LLM context, so we retrieve generously.
+    # With English-centric nomic-embed-text, a Turkish query can rank the one
+    # chunk holding a fact (e.g. Profile's "4 years") LAST — a small top-K would
+    # silently drop it. Top-K filtering earns its keep at scale (many documents),
+    # not for a single page. See README for the multilingual-embeddings follow-up
+    # that makes selective (low top-K) retrieval reliable on Turkish queries.
+    top-k: 20
+    embedding-dimensions: 768       # MUST match the embed model's output size
   ingestion:
-    reload-on-startup: true
+    reload-on-startup: true         # wipe + re-embed cv.md on every boot (dev)
     docs-location: classpath:/docs/cv.md
 
 logging:
   level:
-    org.springframework.ai: INFO
+    com.ege.cvrag: INFO

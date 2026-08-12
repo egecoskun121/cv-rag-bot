@@ -1,13 +1,18 @@
 # CV RAG Bot 🤖
 
-Spring AI ile geliştirilmiş, **tamamen yerel çalışan** (API key gerektirmeyen)
-bir Retrieval-Augmented Generation (RAG) uygulaması. Bir CV/portföy dokümanı
-üzerinde, **kaynağa dayalı** ve halüsinasyonu azaltılmış soru-cevap yapar.
+**Tamamen yerel çalışan** (API key gerektirmeyen) bir Retrieval-Augmented
+Generation (RAG) uygulaması. Bir CV/portföy dokümanı üzerinde **kaynağa dayalı**
+ve halüsinasyonu azaltılmış soru-cevap yapar.
+
+RAG pipeline'ı (embedding üretimi, pgvector'da benzerlik araması, prompt kurulumu)
+bir framework'e devredilmeden **elle** yazılmıştır — Ollama'ya kendi `RestClient`
+çağrıları, pgvector'a kendi native SQL'i. Amaç: mekanizmayı gizlemeden göstermek.
 
 ## Neden bu proje?
 - **RAG** güncel bir konu ve backend + AI kesişiminde "çalışır kanıt" sunar.
 - Ollama sayesinde **ücretsiz ve yerel** — inceleyen kişi kendi makinesinde çalıştırabilir.
-- `pgvector`, `Spring AI`, `Docker` gibi prod'da kullanılan araçları gösterir.
+- `pgvector` (`<=>` cosine operatörü, HNSW index), `RestClient`, `JdbcTemplate`
+  gibi prod'da kullanılan araçları **kaputun altını göstererek** kullanır.
 
 ## Mimari
 
@@ -15,30 +20,39 @@ bir Retrieval-Augmented Generation (RAG) uygulaması. Bir CV/portföy dokümanı
 Kullanıcı sorusu
       │
       ▼
-ChatController (REST /api/ask)
+ChatController (REST /api/v1/ask)
       │
       ▼
-RagService ── QuestionAnswerAdvisor
-      │              │
-      │              ├─ 1) soruyu embedding'e çevir (Ollama: nomic-embed-text)
-      │              ├─ 2) pgvector'da en yakın CV parçalarını bul (topK=8)
-      │              └─ 3) parçaları prompt'a bağlam olarak ekle
+RagService (RAG orkestrasyonu — elle)
+      │
+      ├─ 1) OllamaClient.embed(soru)      → 768'lik vektör  (POST /api/embeddings)
+      ├─ 2) PgVectorStore.search(vec)     → en yakın CV chunk'ları
+      │        SQL: ORDER BY embedding <=> ?::vector LIMIT k
+      ├─ 3) chunk'ları prompt'a bağlam olarak diz
       ▼
-Ollama LLM (qwen2.5:7b) ── "sadece bu bağlama göre cevapla" ──► yanıt
+OllamaClient.chat(system, user)          → yanıt  (POST /api/chat, qwen2.5:7b)
 ```
 
-Indeksleme (uygulama açılışında `CvIngestionRunner`):
+İndeksleme (uygulama açılışında `CvIngestionRunner`):
 `cv.md` → **başlık-farkında (section-aware) böl** (her Markdown bölümü başlığıyla
-birlikte bir chunk) → embed → `pgvector`'a yaz. Bu, bir başlığın (ör. bir iş
-deneyimi) içeriğinden koparılmasını önler ve retrieval doğruluğunu artırır.
+birlikte bir chunk) → `OllamaClient.embed` → `PgVectorStore.save`. Başlık-farkında
+bölme, bir başlığın (ör. bir iş deneyimi) içeriğinden koparılmasını önler.
 
 ## Teknolojiler
 | Katman | Araç |
 |---|---|
-| Framework | Spring Boot 3.3, Spring AI 1.0 |
+| Framework | Spring Boot 3.3 (web + JDBC) — **Spring AI yok, RAG elle** |
 | LLM & Embedding | Ollama (`qwen2.5:7b`, `nomic-embed-text`) — yerel |
-| Vektör deposu | PostgreSQL + `pgvector` |
+| Vektör deposu | PostgreSQL + `pgvector` (`vector(768)`, HNSW, cosine `<=>`) |
+| HTTP / Persistence | `RestClient` (Ollama) + `JdbcTemplate` (native SQL) |
 | Çalıştırma | Docker Compose, Maven, Java 21 |
+
+## Bileşenler
+- `llm/OllamaClient` — Ollama `/api/embeddings` ve `/api/chat`'e HTTP çağrıları.
+- `vectorstore/PgVectorStore` — pgvector şeması (tablo + HNSW index), INSERT ve
+  cosine benzerlik araması; hepsi görünür SQL.
+- `rag/RagService` — embed → search → prompt → chat orkestrasyonu.
+- `ingestion/CvIngestionRunner` — CV'yi bölüp embed'leyip indeksler.
 
 ## Çalıştırma
 
@@ -63,7 +77,7 @@ docker compose up -d
 ```
 
 ### 4. Kullan
-Tarayıcıda **http://localhost:8080** — basit sohbet arayüzü.
+Tarayıcıda **http://localhost:8081** — basit sohbet arayüzü.
 
 Veya API ile:
 ```bash
@@ -77,7 +91,18 @@ curl -s http://localhost:8081/api/v1/ask \
 açılışta yeniden indeksler (`app.ingestion.reload-on-startup=true`).
 
 ## Öğrenilenler / Öne çıkan noktalar
-- RAG pipeline'ının üç fazı: **indeksleme → retrieval → generation**.
-- Embedding boyutu (`768`) ile vektör deposu boyutunun **eşleşmesi** zorunluluğu.
-- `QuestionAnswerAdvisor` ile retrieval'ın prompt'a şeffaf entegrasyonu.
+- RAG pipeline'ının üç fazı: **indeksleme → retrieval → generation** — elle kurulmuş.
+- pgvector mekaniği: `vector(N)` tipi, `<=>` cosine mesafesi, HNSW index.
+- Embedding boyutu (`768`) ile vektör kolonu boyutunun **eşleşmesi** zorunluluğu.
+- Prompt'un dili tek dile sabitlemesi (qwen'in çok dilli token sızıntısını önleme).
 - Yerel LLM ile maliyetsiz, gizliliği koruyan (veri dışarı çıkmaz) mimari.
+
+## Yol haritası / bilinen sınırlamalar
+- **Çok dilli embedding (öncelikli):** `nomic-embed-text` İngilizce-ağırlıklıdır;
+  Türkçe bir sorgu, ilgili İngilizce chunk'ı düşük sıralayabilir. Bu yüzden şu an
+  `top-k` yüksek tutulup 1 sayfalık CV bütün olarak getiriliyor. `bge-m3` gibi çok
+  dilli bir embed modeline geçmek (1024 boyut → şema + `dimensions` güncellenir,
+  yeniden indeksleme gerekir) düşük `top-k` ile **seçici retrieval'ı** güvenilir kılar.
+- **Streaming yanıt:** şu an tek seferde dönüyor; `/api/chat` stream'e çevrilebilir.
+- **Kaynak gösterme:** her chunk'ın `section` bilgisi saklanıyor; yanıtta hangi CV
+  bölümünden geldiğini döndürmek kolayca eklenebilir.

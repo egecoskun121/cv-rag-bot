@@ -1,16 +1,22 @@
 package com.ege.cvrag.web;
 
+import com.ege.cvrag.constant.RagBotConstants;
 import com.ege.cvrag.model.AskRequest;
 import com.ege.cvrag.model.AskResponse;
 import com.ege.cvrag.rag.RagService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping(RagBotConstants.API_V1)
 public class ChatController {
+
+    private static final Logger log = LoggerFactory.getLogger(ChatController.class);
 
     private final RagService ragService;
 
@@ -18,8 +24,10 @@ public class ChatController {
         this.ragService = ragService;
     }
 
-    @PostMapping("/ask")
-    public AskResponse ask(@RequestBody AskRequest request) {
-        return new AskResponse(ragService.ask(request.question()));
+    @PostMapping(RagBotConstants.ASK_PATH)
+    public ResponseEntity<AskResponse> ask(@RequestBody AskRequest request) {
+        log.info("Received question: {}", request.question());
+        AskResponse response = new AskResponse(ragService.ask(request.question()));
+        return ResponseEntity.ok(response);
     }
 }

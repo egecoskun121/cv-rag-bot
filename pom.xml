@@ -15,47 +15,30 @@
     <artifactId>cv-rag-bot</artifactId>
     <version>0.1.0</version>
     <name>cv-rag-bot</name>
-    <description>Spring AI + RAG CV/portfolio assistant powered by local Ollama and pgvector</description>
+    <description>RAG CV/portfolio assistant — hand-rolled retrieval over local Ollama and pgvector (no Spring AI)</description>
 
     <properties>
         <java.version>21</java.version>
-        <spring-ai.version>1.0.0</spring-ai.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.ai</groupId>
-                <artifactId>spring-ai-bom</artifactId>
-                <version>${spring-ai.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
+        <!-- Web + RestClient (HTTP to Ollama) + Jackson JSON -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring AI: Ollama (chat + embedding) -->
+        <!-- JdbcTemplate + DataSource autoconfiguration for the manual pgvector store -->
         <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-ollama</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
 
-        <!-- Spring AI: pgvector vector store (autoconfigures schema + JdbcTemplate) -->
+        <!-- PostgreSQL driver (talks to the pgvector-enabled Postgres) -->
         <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
-        </dependency>
-
-        <!-- Spring AI: QuestionAnswerAdvisor (RAG advisor over a vector store) -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-advisors-vector-store</artifactId>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
