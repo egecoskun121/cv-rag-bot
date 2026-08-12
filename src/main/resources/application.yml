@@ -18,6 +18,10 @@ app:
     embed-model: nomic-embed-text   # pull: `ollama pull nomic-embed-text`
     temperature: 0.0                # deterministic answers over a fixed CV
     read-timeout-seconds: 120       # LLM generation can take a while locally
+    retry:
+      max-attempts: 3               # total tries for a transient failure (incl. the first)
+      base-delay-ms: 300            # backoff base; grows exponentially per attempt
+      max-delay-ms: 3000            # cap on a single backoff wait
   rag:
     # A one-page CV fits entirely in the LLM context, so we retrieve generously.
     # With English-centric nomic-embed-text, a Turkish query can rank the one
