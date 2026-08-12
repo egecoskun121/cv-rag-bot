@@ -6,20 +6,26 @@ import com.ege.cvrag.retry.RetryExecutor;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Integration test for the resilience stack: real OllamaClient + RetryExecutor +
- * OllamaCircuitBreaker wired together, exercised against an in-process HTTP stub
- * (healthy path) and a dead port (outage). No Spring context, no real Ollama.
+ * Integration test for the resilience stack: real OllamaClient + OllamaApi
+ * (@HttpExchange) + RetryExecutor + OllamaCircuitBreaker wired together, exercised
+ * against an in-process HTTP stub (healthy path) and a dead port (outage). No
+ * Spring context, no real Ollama.
  */
 class OllamaClientResilienceIntegrationTest {
 
@@ -35,9 +41,18 @@ class OllamaClientResilienceIntegrationTest {
     }
 
     private OllamaClient clientFor(String baseUrl) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(2));
+        factory.setReadTimeout(Duration.ofSeconds(5));
+        RestClient restClient = RestClient.builder().baseUrl(baseUrl).requestFactory(factory).build();
+        OllamaApi api = HttpServiceProxyFactory
+                .builderFor(RestClientAdapter.create(restClient))
+                .build()
+                .createClient(OllamaApi.class);
+
         RetryExecutor retry = new RetryExecutor(3, 1, 2); // fast retries for tests
         OllamaCircuitBreaker breaker = new OllamaCircuitBreaker(FAILURE_THRESHOLD, 100);
-        return new OllamaClient(baseUrl, "embed-model", "chat-model", 0.0, 5, retry, breaker);
+        return new OllamaClient("embed-model", "chat-model", 0.0, retry, breaker, api);
     }
 
     @Test
