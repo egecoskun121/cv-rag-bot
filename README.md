@@ -1,108 +1,70 @@
-# CV RAG Bot 🤖
+# CV RAG Bot
 
-**Tamamen yerel çalışan** (API key gerektirmeyen) bir Retrieval-Augmented
-Generation (RAG) uygulaması. Bir CV/portföy dokümanı üzerinde **kaynağa dayalı**
-ve halüsinasyonu azaltılmış soru-cevap yapar.
+A small retrieval-augmented generation (RAG) service that answers questions about
+a CV, grounded in the document itself. It runs fully locally — no API keys — using
+Ollama for inference and Postgres/pgvector for similarity search.
 
-RAG pipeline'ı (embedding üretimi, pgvector'da benzerlik araması, prompt kurulumu)
-bir framework'e devredilmeden **elle** yazılmıştır — Ollama'ya kendi `RestClient`
-çağrıları, pgvector'a kendi native SQL'i. Amaç: mekanizmayı gizlemeden göstermek.
+The RAG pipeline is written by hand (no Spring AI): direct HTTP calls to Ollama and
+plain SQL against pgvector, so the retrieval mechanics are visible rather than hidden
+behind a framework.
 
-## Neden bu proje?
-- **RAG** güncel bir konu ve backend + AI kesişiminde "çalışır kanıt" sunar.
-- Ollama sayesinde **ücretsiz ve yerel** — inceleyen kişi kendi makinesinde çalıştırabilir.
-- `pgvector` (`<=>` cosine operatörü, HNSW index), `RestClient`, `JdbcTemplate`
-  gibi prod'da kullanılan araçları **kaputun altını göstererek** kullanır.
-
-## Mimari
+## How it works
 
 ```
-Kullanıcı sorusu
-      │
-      ▼
-ChatController (REST /api/v1/ask)
-      │
-      ▼
-RagService (RAG orkestrasyonu — elle)
-      │
-      ├─ 1) OllamaClient.embed(soru)      → 768'lik vektör  (POST /api/embeddings)
-      ├─ 2) PgVectorStore.search(vec)     → en yakın CV chunk'ları
-      │        SQL: ORDER BY embedding <=> ?::vector LIMIT k
-      ├─ 3) chunk'ları prompt'a bağlam olarak diz
-      ▼
-OllamaClient.chat(system, user)          → yanıt  (POST /api/chat, qwen2.5:7b)
+question ──▶ ChatController ──▶ RagService
+                                   ├─ embed the question         (Ollama /api/embeddings)
+                                   ├─ nearest chunks from pgvector (ORDER BY embedding <=> ?)
+                                   ├─ build a context prompt
+                                   └─ generate the answer        (Ollama /api/chat)
 ```
 
-İndeksleme (uygulama açılışında `CvIngestionRunner`):
-`cv.md` → **başlık-farkında (section-aware) böl** (her Markdown bölümü başlığıyla
-birlikte bir chunk) → `OllamaClient.embed` → `PgVectorStore.save`. Başlık-farkında
-bölme, bir başlığın (ör. bir iş deneyimi) içeriğinden koparılmasını önler.
+At startup, `CvIngestionRunner` reads `cv.md`, splits it by Markdown section (keeping
+each heading with its body), embeds each section, and stores the vectors in pgvector.
 
-## Teknolojiler
-| Katman | Araç |
-|---|---|
-| Framework | Spring Boot 3.3 (web + JDBC) — **Spring AI yok, RAG elle** |
-| LLM & Embedding | Ollama (`qwen2.5:7b`, `nomic-embed-text`) — yerel |
-| Vektör deposu | PostgreSQL + `pgvector` (`vector(768)`, HNSW, cosine `<=>`) |
-| HTTP / Persistence | `RestClient` (Ollama) + `JdbcTemplate` (native SQL) |
-| Çalıştırma | Docker Compose, Maven, Java 21 |
+## Stack
 
-## Bileşenler
-- `llm/OllamaClient` — Ollama `/api/embeddings` ve `/api/chat`'e HTTP çağrıları.
-- `vectorstore/PgVectorStore` — pgvector şeması (tablo + HNSW index), INSERT ve
-  cosine benzerlik araması; hepsi görünür SQL.
-- `rag/RagService` — embed → search → prompt → chat orkestrasyonu.
-- `ingestion/CvIngestionRunner` — CV'yi bölüp embed'leyip indeksler.
+| Layer            | Technology                                             |
+|------------------|--------------------------------------------------------|
+| Runtime          | Java 21, Spring Boot 3.3 (web + JDBC)                   |
+| Inference        | Ollama — `qwen2.5:7b` (chat), `nomic-embed-text` (embed)|
+| Vector store     | PostgreSQL + pgvector (`vector(768)`, HNSW, cosine)     |
+| HTTP / DB access  | `RestClient`, `JdbcTemplate`                           |
 
-## Çalıştırma
+## Prerequisites
 
-### 0. Gereksinimler
 - Java 21, Maven, Docker
-- [Ollama](https://ollama.com) kurulu
+- [Ollama](https://ollama.com)
 
-### 1. Modelleri indir (bir kez)
+## Running
+
 ```bash
 ollama pull qwen2.5:7b
 ollama pull nomic-embed-text
-```
-
-### 2. pgvector'ı başlat
-```bash
 docker compose up -d
+./mvnw spring-boot:run
 ```
 
-### 3. Uygulamayı çalıştır
-```bash
-./mvnw spring-boot:run   # ya da: mvn spring-boot:run
-```
+Open http://localhost:8081 for the chat UI, or call the API:
 
-### 4. Kullan
-Tarayıcıda **http://localhost:8081** — basit sohbet arayüzü.
-
-Veya API ile:
 ```bash
 curl -s http://localhost:8081/api/v1/ask \
   -H 'Content-Type: application/json' \
-  -d '{"question":"Ege'\''nin Spring deneyimi ne?"}'
+  -d '{"question":"How many years of experience does Ege have?"}'
 ```
 
-## Kendi verinle özelleştir
-`src/main/resources/docs/cv.md` dosyasını kendi CV'nle değiştir. Uygulama her
-açılışta yeniden indeksler (`app.ingestion.reload-on-startup=true`).
+Health check: `GET http://localhost:8081/health`.
 
-## Öğrenilenler / Öne çıkan noktalar
-- RAG pipeline'ının üç fazı: **indeksleme → retrieval → generation** — elle kurulmuş.
-- pgvector mekaniği: `vector(N)` tipi, `<=>` cosine mesafesi, HNSW index.
-- Embedding boyutu (`768`) ile vektör kolonu boyutunun **eşleşmesi** zorunluluğu.
-- Prompt'un dili tek dile sabitlemesi (qwen'in çok dilli token sızıntısını önleme).
-- Yerel LLM ile maliyetsiz, gizliliği koruyan (veri dışarı çıkmaz) mimari.
+## Configuration
 
-## Yol haritası / bilinen sınırlamalar
-- **Çok dilli embedding (öncelikli):** `nomic-embed-text` İngilizce-ağırlıklıdır;
-  Türkçe bir sorgu, ilgili İngilizce chunk'ı düşük sıralayabilir. Bu yüzden şu an
-  `top-k` yüksek tutulup 1 sayfalık CV bütün olarak getiriliyor. `bge-m3` gibi çok
-  dilli bir embed modeline geçmek (1024 boyut → şema + `dimensions` güncellenir,
-  yeniden indeksleme gerekir) düşük `top-k` ile **seçici retrieval'ı** güvenilir kılar.
-- **Streaming yanıt:** şu an tek seferde dönüyor; `/api/chat` stream'e çevrilebilir.
-- **Kaynak gösterme:** her chunk'ın `section` bilgisi saklanıyor; yanıtta hangi CV
-  bölümünden geldiğini döndürmek kolayca eklenebilir.
+Key settings live in `src/main/resources/application.yml` under `app.*`:
+chat/embedding models, `top-k`, and embedding dimensions. Replace
+`src/main/resources/docs/cv.md` with your own CV; it is re-indexed on each startup.
+
+## Notes
+
+- `top-k` is set high because a one-page CV fits entirely in the context window.
+  `nomic-embed-text` is English-centric, so a Turkish query can rank the relevant
+  chunk low; a multilingual embedding model (e.g. `bge-m3`) would make selective,
+  low `top-k` retrieval reliable.
+- `app.ingestion.reload-on-startup` wipes and re-embeds on every boot; disable it
+  for a persistent store.

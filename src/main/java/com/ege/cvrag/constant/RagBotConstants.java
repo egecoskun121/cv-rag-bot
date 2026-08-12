@@ -17,6 +17,12 @@ public final class RagBotConstants {
     public static final String HEALTH_PATH = "/health";
     public static final String STATUS_UP = "UP";
 
+    // --- Error messages ---
+    public static final String ERROR_AI_UNAVAILABLE = "AI service (Ollama) is unavailable. Make sure it is running.";
+    public static final String ERROR_AI_BAD_RESPONSE = "AI service returned an invalid response.";
+    public static final String ERROR_DATA_ACCESS = "Data store is unavailable.";
+    public static final String ERROR_UNEXPECTED = "An unexpected error occurred.";
+
     // --- Ollama HTTP endpoints ---
     public static final String OLLAMA_EMBEDDINGS_ENDPOINT = "/api/embeddings";
     public static final String OLLAMA_CHAT_ENDPOINT = "/api/chat";
