@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -50,7 +51,7 @@ public class OllamaClient {
     public float[] embed(String text) {
         OllamaEmbeddingResponse response =
                 guardedCall(() -> api.embed(new OllamaEmbeddingRequest(embedModel, text)));
-        if (response == null || response.embedding() == null) {
+        if (Objects.isNull(response) || Objects.isNull(response.embedding())) {
             throw new IllegalStateException("Ollama returned no embedding for text: " + preview(text));
         }
         return response.embedding();
@@ -64,7 +65,7 @@ public class OllamaClient {
                 List.of(new OllamaChatMessage(RagBotConstants.ROLE_SYSTEM, systemPrompt),
                         new OllamaChatMessage(RagBotConstants.ROLE_USER, userPrompt)),
                 new OllamaChatOptions(temperature))));
-        if (response == null || response.message() == null) {
+        if (Objects.isNull(response) || Objects.isNull(response.message())) {
             throw new IllegalStateException("Ollama returned no chat message");
         }
         return response.message().content();
@@ -78,7 +79,7 @@ public class OllamaClient {
     public OllamaChatMessage chatWithTools(List<OllamaChatMessage> messages, List<OllamaTool> tools) {
         OllamaChatResponse response = guardedCall(() -> api.chat(new OllamaChatRequest(
                 chatModel, false, messages, new OllamaChatOptions(temperature), tools)));
-        if (response == null || response.message() == null) {
+        if (Objects.isNull(response) || Objects.isNull(response.message())) {
             throw new IllegalStateException("Ollama returned no chat message");
         }
         return response.message();

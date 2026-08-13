@@ -23,6 +23,10 @@ public final class RagBotConstants {
     // --- Agentic RAG ---
     public static final String ROLE_TOOL = "tool";
     public static final String SEARCH_CV_TOOL = "search_cv";
+    public static final String SEARCH_CV_DESCRIPTION = "Search the CV for information relevant to a query.";
+    public static final String SEARCH_CV_QUERY_DESCRIPTION = "What to look up in the CV";
+    public static final String NO_QUERY_PROVIDED = "No query provided.";
+    public static final String NO_MATCHING_SECTIONS = "No matching CV sections found.";
 
     public static final String AGENT_SYSTEM_PROMPT = """
             You are the portfolio assistant for Ege. You do NOT know the CV contents

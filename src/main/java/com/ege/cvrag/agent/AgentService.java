@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,7 +55,7 @@ public class AgentService {
             messages.add(reply);
 
             List<OllamaToolCall> toolCalls = reply.toolCalls();
-            if (toolCalls == null || toolCalls.isEmpty()) {
+            if (Objects.isNull(toolCalls) || toolCalls.isEmpty()) {
                 return contentOrEmpty(reply);            // final answer
             }
 
@@ -77,6 +78,6 @@ public class AgentService {
     }
 
     private static String contentOrEmpty(OllamaChatMessage message) {
-        return message.content() == null ? "" : message.content();
+        return Objects.isNull(message.content()) ? "" : message.content();
     }
 }

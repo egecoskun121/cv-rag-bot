@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -47,25 +48,25 @@ public class CvSearchTool implements AgentTool {
                 "properties", Map.of(
                         QUERY_ARG, Map.of(
                                 "type", "string",
-                                "description", "What to look up in Ege's CV")),
+                                "description", RagBotConstants.SEARCH_CV_QUERY_DESCRIPTION)),
                 "required", List.of(QUERY_ARG));
         return OllamaTool.function(new OllamaFunctionDef(
-                name(), "Search Ege's CV for information relevant to a query.", parameters));
+                name(), RagBotConstants.SEARCH_CV_DESCRIPTION, parameters));
     }
 
     @Override
     public String execute(Map<String, Object> arguments) {
-        Object query = arguments == null ? null : arguments.get(QUERY_ARG);
-        if (query == null || query.toString().isBlank()) {
-            return "No query provided.";
+        Object query = Objects.isNull(arguments) ? null : arguments.get(QUERY_ARG);
+        if (Objects.isNull(query) || query.toString().isBlank()) {
+            return RagBotConstants.NO_QUERY_PROVIDED;
         }
         float[] embedding = ollama.embed(query.toString());
         List<CvChunk> hits = vectorStore.search(embedding, topK);
         if (hits.isEmpty()) {
-            return "No matching CV sections found.";
+            return RagBotConstants.NO_MATCHING_SECTIONS;
         }
         return hits.stream()
                 .map(CvChunk::content)
-                .collect(Collectors.joining("\n\n---\n\n"));
+                .collect(Collectors.joining(RagBotConstants.CONTEXT_SEPARATOR));
     }
 }
