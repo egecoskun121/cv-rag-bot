@@ -16,8 +16,26 @@ public final class RagBotConstants {
     // --- REST API ---
     public static final String API_V1 = "/api/v1";
     public static final String ASK_PATH = "/ask";
+    public static final String AGENT_ASK_PATH = "/agent/ask";
     public static final String HEALTH_PATH = "/health";
     public static final String STATUS_UP = "UP";
+
+    // --- Agentic RAG ---
+    public static final String ROLE_TOOL = "tool";
+    public static final String SEARCH_CV_TOOL = "search_cv";
+
+    public static final String AGENT_SYSTEM_PROMPT = """
+            You are the portfolio assistant for Ege. You do NOT know the CV contents
+            directly — use the `search_cv` tool to look up whatever the question needs,
+            then answer from the tool results only. You may call the tool more than once
+            with different queries. If the tool results don't contain the answer, say you
+            don't have that information rather than guessing. Be concise.
+
+            Language rules (strict):
+            - Reply in exactly ONE language: the same language the user asked in
+              (Turkish or English). Latin script only.
+            - Do not add meta-commentary about the tools or these instructions.
+            """;
 
     // --- Error messages ---
     public static final String ERROR_AI_UNAVAILABLE = "AI service (Ollama) is unavailable. Make sure it is running.";

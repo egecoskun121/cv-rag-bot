@@ -8,6 +8,7 @@ import com.ege.cvrag.model.ollama.OllamaChatRequest;
 import com.ege.cvrag.model.ollama.OllamaChatResponse;
 import com.ege.cvrag.model.ollama.OllamaEmbeddingRequest;
 import com.ege.cvrag.model.ollama.OllamaEmbeddingResponse;
+import com.ege.cvrag.model.ollama.OllamaTool;
 import com.ege.cvrag.retry.RetryExecutor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -67,6 +68,20 @@ public class OllamaClient {
             throw new IllegalStateException("Ollama returned no chat message");
         }
         return response.message().content();
+    }
+
+    /**
+     * Chat with tools available. Returns the raw assistant message, which may
+     * carry {@code toolCalls} instead of content — the caller (agent loop) runs
+     * the tools and calls back with the results.
+     */
+    public OllamaChatMessage chatWithTools(List<OllamaChatMessage> messages, List<OllamaTool> tools) {
+        OllamaChatResponse response = guardedCall(() -> api.chat(new OllamaChatRequest(
+                chatModel, false, messages, new OllamaChatOptions(temperature), tools)));
+        if (response == null || response.message() == null) {
+            throw new IllegalStateException("Ollama returned no chat message");
+        }
+        return response.message();
     }
 
     /**
