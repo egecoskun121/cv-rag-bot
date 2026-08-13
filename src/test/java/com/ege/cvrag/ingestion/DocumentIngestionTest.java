@@ -5,6 +5,7 @@ import com.ege.cvrag.vectorstore.PgVectorStore;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -19,7 +20,7 @@ class DocumentIngestionTest {
     private record FakeSource(String name, String markdown) implements DocumentSource {
         @Override
         public String markdown() {
-            if (markdown == null) {
+            if (Objects.isNull(markdown)) {
                 throw new IllegalStateException("boom");
             }
             return markdown;

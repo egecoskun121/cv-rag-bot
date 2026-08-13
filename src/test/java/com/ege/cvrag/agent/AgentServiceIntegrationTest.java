@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,7 +43,7 @@ class AgentServiceIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        if (server != null) {
+        if (Objects.nonNull(server)) {
             server.stop(0);
         }
     }

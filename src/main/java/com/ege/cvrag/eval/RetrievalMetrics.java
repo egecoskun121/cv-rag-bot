@@ -1,6 +1,7 @@
 package com.ege.cvrag.eval;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Pure scoring functions for the evaluation harness. No Spring, no I/O — so they
@@ -35,10 +36,10 @@ public final class RetrievalMetrics {
      * Returns 1.0 when there are no keywords to check.
      */
     public static double keywordCoverage(String answer, List<String> keywords) {
-        if (keywords == null || keywords.isEmpty()) {
+        if (Objects.isNull(keywords) || keywords.isEmpty()) {
             return 1.0;
         }
-        String haystack = answer == null ? "" : answer.toLowerCase();
+        String haystack = Objects.isNull(answer) ? "" : answer.toLowerCase();
         long matched = keywords.stream()
                 .filter(k -> haystack.contains(k.toLowerCase()))
                 .count();

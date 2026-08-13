@@ -10,6 +10,7 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,7 +36,7 @@ class GitHubProjectsSourceIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        if (server != null) {
+        if (Objects.nonNull(server)) {
             server.stop(0);
         }
     }
