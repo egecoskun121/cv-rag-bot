@@ -66,6 +66,30 @@ Key settings live in `src/main/resources/application.yml` under `app.*`:
 chat/embedding models, `top-k`, and embedding dimensions. Replace
 `src/main/resources/docs/cv.md` with your own CV; it is re-indexed on each startup.
 
+## Agentic RAG (alternative endpoint)
+
+`POST /api/v1/ask` runs a **fixed** pipeline (always embed → search → answer).
+`POST /api/v1/agent/ask` instead runs an **agent** — the model decides *when* and
+*with what query* to retrieve, via a tool-use loop:
+
+```
+question ──▶ model (with a `search_cv` tool)
+                 │
+                 ├─ replies with a tool call? → run search_cv, feed results back, loop
+                 └─ replies with an answer?   → done
+```
+
+Components: `agent/CvSearchTool` (the retrieval tool the model can call) and
+`agent/AgentService` (the loop / "agent harness", capped by `app.agent.max-iterations`).
+This uses Ollama's tool-calling — the model emits structured `tool_calls`, the
+harness executes them and returns the results as `tool` messages.
+
+```bash
+curl -s http://localhost:8081/api/v1/agent/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"What did Ege do at ilaBank?"}'
+```
+
 ## Evaluation
 
 A small evaluation harness measures RAG quality against a gold Q&A set

@@ -38,6 +38,9 @@ app:
     # Smaller k for the evaluation harness so Recall@k / MRR discriminate
     # (production top-k=20 covers the whole CV, making recall trivially 1.0).
     top-k: 5
+  agent:
+    max-iterations: 5   # safety cap on the agent tool-use loop
+    top-k: 5            # chunks the search_cv tool returns per call
   ingestion:
     reload-on-startup: true         # wipe + re-embed cv.md on every boot (dev)
     docs-location: classpath:/docs/cv.md
