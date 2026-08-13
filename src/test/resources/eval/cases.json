@@ -1,0 +1,42 @@
+[
+  {
+    "question": "Where did Ege study?",
+    "expectedSection": "Education",
+    "expectedKeywords": ["Yaşar"]
+  },
+  {
+    "question": "What AWS certifications does Ege have?",
+    "expectedSection": "Certificates",
+    "expectedKeywords": ["Cloud Practitioner"]
+  },
+  {
+    "question": "What did Ege do at ilaBank?",
+    "expectedSection": "Backend Developer — ilaBank (Jul 2024 – Present)",
+    "expectedKeywords": ["microservices"]
+  },
+  {
+    "question": "Which databases does Ege know?",
+    "expectedSection": "Skills",
+    "expectedKeywords": ["PostgreSQL"]
+  },
+  {
+    "question": "What did Ege do at Huawei?",
+    "expectedSection": "Backend Intern — Huawei (Dec 2022 – Mar 2023)",
+    "expectedKeywords": ["ELK"]
+  },
+  {
+    "question": "What was Ege's role at Univera?",
+    "expectedSection": "QA Test Intern — Univera (Jul 2022 – Oct 2022)",
+    "expectedKeywords": ["Selenium"]
+  },
+  {
+    "question": "How many years of experience does Ege have?",
+    "expectedSection": "Profile / Summary",
+    "expectedKeywords": ["4"]
+  },
+  {
+    "question": "What languages does Ege speak?",
+    "expectedSection": "Languages",
+    "expectedKeywords": ["English"]
+  }
+]

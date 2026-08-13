@@ -66,6 +66,24 @@ Key settings live in `src/main/resources/application.yml` under `app.*`:
 chat/embedding models, `top-k`, and embedding dimensions. Replace
 `src/main/resources/docs/cv.md` with your own CV; it is re-indexed on each startup.
 
+## Evaluation
+
+A small evaluation harness measures RAG quality against a gold Q&A set
+(`src/test/resources/eval/cases.json`) instead of eyeballing answers:
+
+- **Retrieval:** Recall@k and MRR — is the expected CV section retrieved, and how high?
+- **Answer:** keyword coverage — does the answer contain the expected facts?
+
+The pure scoring (`RetrievalMetrics`) is unit-tested in CI. The full run needs a
+live Ollama + pgvector, so it is off by default and runs as a local tool:
+
+```bash
+mvn test -Deval=true -Dtest=RagEvaluationHarnessTest
+```
+
+It writes `target/eval-report.md`. This is how you can quantify improvements —
+e.g. show that switching to a multilingual embedding model raises Recall@k.
+
 ## Notes
 
 - `top-k` is set high because a one-page CV fits entirely in the context window.
