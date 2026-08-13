@@ -34,6 +34,10 @@ app:
     # that makes selective (low top-K) retrieval reliable on Turkish queries.
     top-k: 20
     embedding-dimensions: 768       # MUST match the embed model's output size
+  eval:
+    # Smaller k for the evaluation harness so Recall@k / MRR discriminate
+    # (production top-k=20 covers the whole CV, making recall trivially 1.0).
+    top-k: 5
   ingestion:
     reload-on-startup: true         # wipe + re-embed cv.md on every boot (dev)
     docs-location: classpath:/docs/cv.md
