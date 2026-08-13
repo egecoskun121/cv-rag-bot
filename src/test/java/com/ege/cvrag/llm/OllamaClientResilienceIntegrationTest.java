@@ -17,6 +17,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,7 +36,7 @@ class OllamaClientResilienceIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        if (server != null) {
+        if (Objects.nonNull(server)) {
             server.stop(0);
         }
     }

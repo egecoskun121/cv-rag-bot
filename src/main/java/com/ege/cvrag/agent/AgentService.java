@@ -71,7 +71,7 @@ public class AgentService {
     private OllamaChatMessage runTool(OllamaToolCall call) {
         String toolName = call.function().name();
         AgentTool tool = toolsByName.get(toolName);
-        String result = (tool == null)
+        String result = Objects.isNull(tool)
                 ? "Unknown tool: " + toolName
                 : tool.execute(call.function().arguments());
         return new OllamaChatMessage(RagBotConstants.ROLE_TOOL, result);
