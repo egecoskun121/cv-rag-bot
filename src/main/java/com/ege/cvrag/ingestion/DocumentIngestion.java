@@ -1,5 +1,8 @@
 package com.ege.cvrag.ingestion;
 
+import com.ege.cvrag.constant.RagBotConstants;
+import com.ege.cvrag.model.ingestion.IngestionSummary;
+import com.ege.cvrag.model.ingestion.SourceIngestResult;
 import com.ege.cvrag.startup.RunOnStartup;
 import com.ege.cvrag.vectorstore.PgVectorStore;
 import org.slf4j.Logger;
@@ -10,12 +13,14 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Indexes every {@link DocumentSource} into the vector store at startup.
+ * Indexes every {@link DocumentSource} into the vector store.
  *
  * Spring injects all {@code DocumentSource} beans (ordered by {@code @Order}), so
- * adding a source never changes this class. The reload-clear happens once, up
- * front; each source is indexed independently, and a failing source is logged
- * and skipped so the rest still make it in.
+ * adding a source never changes this class. {@link #reindex()} clears the store
+ * (when enabled) then indexes each source independently — a failing source is
+ * logged and skipped so the rest still make it in. It runs once at startup via
+ * {@code @RunOnStartup}, and again on demand from {@code POST /api/v1/reindex}
+ * (update the CV in S3 → re-index without a restart).
  */
 @Component
 public class DocumentIngestion {
@@ -38,20 +43,26 @@ public class DocumentIngestion {
     }
 
     @RunOnStartup
-    public void ingest() {
+    public IngestionSummary reindex() {
         if (reloadOnStartup) {
             int deleted = vectorStore.deleteAll();
             log.info("Cleared {} existing vector rows before re-ingestion", deleted);
         }
-        sources.forEach(this::indexSource);
+        List<SourceIngestResult> results = sources.stream().map(this::indexSource).toList();
+        int total = results.stream().mapToInt(SourceIngestResult::chunks).sum();
+        log.info("Re-index complete: {} chunks across {} source(s)", total, results.size());
+        return new IngestionSummary(total, results);
     }
 
-    private void indexSource(DocumentSource source) {
+    private SourceIngestResult indexSource(DocumentSource source) {
         try {
             int count = indexer.index(source.markdown());
             log.info("Indexed {} chunks from {}", count, source.name());
+            return new SourceIngestResult(source.name(), count, RagBotConstants.INGEST_STATUS_INDEXED);
         } catch (RuntimeException ex) {
             log.warn("Skipping source {} — {}", source.name(), ex.getMessage());
+            return new SourceIngestResult(source.name(), 0,
+                    RagBotConstants.INGEST_STATUS_SKIPPED + ex.getMessage());
         }
     }
 }
