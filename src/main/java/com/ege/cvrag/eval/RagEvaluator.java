@@ -10,7 +10,6 @@ import com.ege.cvrag.vectorstore.PgVectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,38 +42,37 @@ public class RagEvaluator {
     }
 
     public EvalReport evaluate(List<EvalCase> cases) {
-        List<CaseResult> results = new ArrayList<>();
-        for (EvalCase c : cases) {
-            float[] queryEmbedding = ollama.embed(c.question());
-            List<String> sections = vectorStore.search(queryEmbedding, evalTopK).stream()
-                    .map(CvChunk::section)
-                    .toList();
+        List<CaseResult> results = cases.stream()
+                .map(this::evaluateCase)
+                .toList();
 
-            boolean hit = RetrievalMetrics.hit(sections, c.expectedSection());
-            double rr = RetrievalMetrics.reciprocalRank(sections, c.expectedSection());
-
-            String answer = ragService.ask(c.question());
-            double coverage = RetrievalMetrics.keywordCoverage(answer, c.expectedKeywords());
-
-            results.add(new CaseResult(
-                    c.question(), c.expectedSection(), sections, hit, rr, coverage, answer));
-        }
-
-        double recall = mean(results.stream().mapToDouble(r -> r.retrievalHit() ? 1.0 : 0.0).toArray());
-        double mrr = mean(results.stream().mapToDouble(CaseResult::reciprocalRank).toArray());
-        double coverage = mean(results.stream().mapToDouble(CaseResult::keywordCoverage).toArray());
+        double recall = results.stream()
+                .mapToDouble(r -> r.retrievalHit() ? 1.0 : 0.0)
+                .average().orElse(0.0);
+        double mrr = results.stream()
+                .mapToDouble(CaseResult::reciprocalRank)
+                .average().orElse(0.0);
+        double coverage = results.stream()
+                .mapToDouble(CaseResult::keywordCoverage)
+                .average().orElse(0.0);
 
         return new EvalReport(results.size(), evalTopK, recall, mrr, coverage, results);
     }
 
-    private static double mean(double[] values) {
-        if (values.length == 0) {
-            return 0.0;
-        }
-        double sum = 0.0;
-        for (double v : values) {
-            sum += v;
-        }
-        return sum / values.length;
+    /** Runs one case through the pipeline and scores its retrieval + answer. */
+    private CaseResult evaluateCase(EvalCase c) {
+        float[] queryEmbedding = ollama.embed(c.question());
+        List<String> sections = vectorStore.search(queryEmbedding, evalTopK).stream()
+                .map(CvChunk::section)
+                .toList();
+
+        boolean hit = RetrievalMetrics.hit(sections, c.expectedSection());
+        double rr = RetrievalMetrics.reciprocalRank(sections, c.expectedSection());
+
+        String answer = ragService.ask(c.question());
+        double coverage = RetrievalMetrics.keywordCoverage(answer, c.expectedKeywords());
+
+        return new CaseResult(
+                c.question(), c.expectedSection(), sections, hit, rr, coverage, answer);
     }
 }

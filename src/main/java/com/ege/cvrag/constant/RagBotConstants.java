@@ -11,6 +11,8 @@ public final class RagBotConstants {
         // utility class — no instances
     }
 
+    
+
     // --- REST API ---
     public static final String API_V1 = "/api/v1";
     public static final String ASK_PATH = "/ask";
