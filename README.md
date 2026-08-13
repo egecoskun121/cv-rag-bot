@@ -75,7 +75,12 @@ you just add a `@Component` (Open/Closed). It runs at startup via a custom
 `@RunOnStartup` annotation (see `startup/`), and everything is chunked
 section-by-section by the same `MarkdownIndexer`.
 
-- **`cv.md`** — the CV (`CvDocumentSource`).
+- **`cv.md`** — the CV. Loaded from the local classpath by `CvDocumentSource`
+  (default), or from **AWS S3** by `S3DocumentSource` — switch with
+  `app.docs.source: s3` and set `app.docs.s3.{bucket,key,region}`. Exactly one is
+  wired in (`@ConditionalOnProperty`), so the orchestrator is unaware of the
+  origin. Credentials come from the AWS default provider chain (env vars, profile,
+  or an instance/container role) — none are stored in the app.
 - **GitHub projects** — the user's own (non-fork, described) repositories, fetched
   live from the GitHub API with their real language breakdown as the tech stack
   (`GitHubProjectsSource`). Configure under `app.github` (`enabled`, `user`,
