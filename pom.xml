@@ -19,7 +19,21 @@
 
     <properties>
         <java.version>21</java.version>
+        <aws.sdk.version>2.28.29</aws.sdk.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- AWS SDK for Java v2 BOM — aligns all aws artifact versions -->
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Web + RestClient (HTTP to Ollama) + Jackson JSON -->
@@ -39,6 +53,12 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- AWS S3 client (v2) — optional CV document source; version from the BOM above -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
         </dependency>
 
         <dependency>

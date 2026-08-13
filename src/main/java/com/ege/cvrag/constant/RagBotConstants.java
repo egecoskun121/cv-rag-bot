@@ -56,6 +56,12 @@ public final class RagBotConstants {
     public static final String ROLE_SYSTEM = "system";
     public static final String ROLE_USER = "user";
 
+    // --- Document sources ---
+    public static final String DOCS_SOURCE_CLASSPATH = "classpath";
+    public static final String DOCS_SOURCE_S3 = "s3";
+    public static final String S3_URI_PREFIX = "s3://";
+    public static final String ERROR_S3_READ = "Failed to read CV from S3 object ";
+
     // --- Markdown section parsing ---
     public static final String MARKDOWN_H2_PREFIX = "## ";
     public static final String MARKDOWN_H3_PREFIX = "### ";

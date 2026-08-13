@@ -41,6 +41,14 @@ app:
   agent:
     max-iterations: 5   # safety cap on the agent tool-use loop
     top-k: 5            # chunks the search_cv tool returns per call
+  docs:
+    # Where the CV Markdown comes from: `classpath` (bundled cv.md) or `s3`.
+    # Only one CvDocumentSource / S3DocumentSource is wired in (@ConditionalOnProperty).
+    source: classpath               # classpath | s3
+    s3:
+      bucket: ""                    # e.g. ege-cv-rag-docs (set when source=s3)
+      key: cv.md                    # object key inside the bucket
+      region: eu-central-1          # AWS region of the bucket
   ingestion:
     reload-on-startup: true         # wipe + re-embed cv.md on every boot (dev)
     docs-location: classpath:/docs/cv.md
