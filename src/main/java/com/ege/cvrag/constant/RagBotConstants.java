@@ -17,8 +17,13 @@ public final class RagBotConstants {
     public static final String API_V1 = "/api/v1";
     public static final String ASK_PATH = "/ask";
     public static final String AGENT_ASK_PATH = "/agent/ask";
+    public static final String REINDEX_PATH = "/reindex";
     public static final String HEALTH_PATH = "/health";
     public static final String STATUS_UP = "UP";
+
+    // --- Ingestion status ---
+    public static final String INGEST_STATUS_INDEXED = "indexed";
+    public static final String INGEST_STATUS_SKIPPED = "skipped: ";
 
     // --- Agentic RAG ---
     public static final String ROLE_TOOL = "tool";

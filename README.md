@@ -89,6 +89,15 @@ section-by-section by the same `MarkdownIndexer`.
 So the bot answers about the CV *and* the projects ("what tech stack does
 cv-rag-bot use?", "what projects has Ege built?").
 
+**Re-index without a restart:** `POST /api/v1/reindex` re-runs the exact same
+ingestion that fires at startup and returns the per-source chunk breakdown. Handy
+with the S3 source — update `cv.md` in the bucket, then:
+
+```bash
+curl -X POST http://localhost:8081/api/v1/reindex
+# {"totalChunks":34,"sources":[{"source":"CV (s3://…/cv.md)","chunks":14,"status":"indexed"}, …]}
+```
+
 ## Agentic RAG (alternative endpoint)
 
 `POST /api/v1/ask` runs a **fixed** pipeline (always embed → search → answer).
