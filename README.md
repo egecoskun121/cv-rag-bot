@@ -66,6 +66,21 @@ Key settings live in `src/main/resources/application.yml` under `app.*`:
 chat/embedding models, `top-k`, and embedding dimensions. Replace
 `src/main/resources/docs/cv.md` with your own CV; it is re-indexed on each startup.
 
+## Data sources
+
+The vector store is populated at startup from two sources, both chunked
+section-by-section by the same `MarkdownIndexer`:
+
+- **`cv.md`** — the CV (`CvIngestionRunner`).
+- **GitHub projects** — the user's own (non-fork, described) repositories, fetched
+  live from the GitHub API with their real language breakdown as the tech stack
+  (`GitHubIngestionRunner` → `GitHubProjectsSource`). Configure under `app.github`
+  (`enabled`, `user`, optional `token`). A GitHub failure is logged and skipped —
+  the CV bot still works.
+
+So the bot answers about the CV *and* the projects ("what tech stack does
+cv-rag-bot use?", "what projects has Ege built?").
+
 ## Agentic RAG (alternative endpoint)
 
 `POST /api/v1/ask` runs a **fixed** pipeline (always embed → search → answer).

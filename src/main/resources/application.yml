@@ -44,6 +44,11 @@ app:
   ingestion:
     reload-on-startup: true         # wipe + re-embed cv.md on every boot (dev)
     docs-location: classpath:/docs/cv.md
+  github:
+    enabled: true
+    user: egecoskun121
+    base-url: https://api.github.com
+    token: ""                       # optional PAT; empty = unauthenticated (60 req/hr)
 
 logging:
   level:
