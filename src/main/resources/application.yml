@@ -10,6 +10,21 @@ spring:
     username: postgres
     password: postgres
 
+  # Only used when app.ingestion.mode=kafka (see below). Harmless in sync mode:
+  # no listeners start and the producer is never called, so no broker connection.
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: cv-rag-ingestion
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.ege.cvrag.model.ingestion
+
 # Application config for the hand-rolled RAG pipeline.
 app:
   ollama:
@@ -50,8 +65,15 @@ app:
       key: cv.md                    # object key inside the bucket
       region: eu-central-1          # AWS region of the bucket
   ingestion:
+    # How sources are indexed: `sync` (inline, in-process) or `kafka` (publish one
+    # event per source; a consumer indexes them async, with retry + dead-letter).
+    mode: sync                      # sync | kafka
     reload-on-startup: true         # wipe + re-embed cv.md on every boot (dev)
     docs-location: classpath:/docs/cv.md
+    kafka:
+      requests-topic: document-ingest-requests   # DLT is <topic>.DLT
+      retry-attempts: 3             # in-place retries before routing to the DLT
+      retry-backoff-ms: 1000
   github:
     enabled: true
     user: egecoskun121

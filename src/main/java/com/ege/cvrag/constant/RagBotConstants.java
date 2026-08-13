@@ -24,6 +24,11 @@ public final class RagBotConstants {
     // --- Ingestion status ---
     public static final String INGEST_STATUS_INDEXED = "indexed";
     public static final String INGEST_STATUS_SKIPPED = "skipped: ";
+    public static final String INGEST_STATUS_QUEUED = "queued";
+
+    // --- Ingestion mode (app.ingestion.mode) ---
+    public static final String INGEST_MODE_SYNC = "sync";
+    public static final String INGEST_MODE_KAFKA = "kafka";
 
     // --- Agentic RAG ---
     public static final String ROLE_TOOL = "tool";
