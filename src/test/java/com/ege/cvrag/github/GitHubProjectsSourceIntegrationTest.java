@@ -50,7 +50,7 @@ class GitHubProjectsSourceIntegrationTest {
         GitHubProjectsSource source = new GitHubProjectsSource(
                 gitHubApiFor("http://localhost:" + server.getAddress().getPort()), "testuser");
 
-        String markdown = source.asMarkdown();
+        String markdown = source.markdown();
 
         assertThat(markdown).contains("## Project: realrepo");
         assertThat(markdown).contains("A real project");

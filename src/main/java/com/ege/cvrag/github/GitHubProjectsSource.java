@@ -1,18 +1,25 @@
 package com.ege.cvrag.github;
 
+import com.ege.cvrag.ingestion.DocumentSource;
 import com.ege.cvrag.model.github.GitHubRepo;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.stream.Collectors;
 
 /**
- * Fetches the user's own (non-fork), described repositories from GitHub and
- * renders them as one Markdown section per project for indexing.
+ * GitHub projects as a {@link DocumentSource}: fetches the user's own (non-fork,
+ * described) repositories and renders one Markdown section per project, with the
+ * real language breakdown as the tech stack. Only created when
+ * {@code app.github.enabled=true}, so disabling it simply removes the source.
  */
 @Component
-public class GitHubProjectsSource {
+@Order(2)
+@ConditionalOnProperty(prefix = "app.github", name = "enabled", havingValue = "true")
+public class GitHubProjectsSource implements DocumentSource {
 
     private final GitHubApi gitHubApi;
     private final String user;
@@ -22,7 +29,13 @@ public class GitHubProjectsSource {
         this.user = user;
     }
 
-    public String asMarkdown() {
+    @Override
+    public String name() {
+        return "GitHub projects (" + user + ")";
+    }
+
+    @Override
+    public String markdown() {
         return gitHubApi.listRepos(user).stream()
                 .filter(this::isRealProject)
                 .map(repo -> GitHubProjectFormatter.format(repo, gitHubApi.languages(user, repo.name())))

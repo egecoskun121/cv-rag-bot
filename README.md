@@ -68,15 +68,18 @@ chat/embedding models, `top-k`, and embedding dimensions. Replace
 
 ## Data sources
 
-The vector store is populated at startup from two sources, both chunked
-section-by-section by the same `MarkdownIndexer`:
+Ingestion is source-pluggable. Each source implements `DocumentSource`
+(`markdown()`), and `DocumentIngestion` gets them all injected as a
+`List<DocumentSource>` — so **adding a source never changes the orchestrator**,
+you just add a `@Component` (Open/Closed). It runs at startup via a custom
+`@RunOnStartup` annotation (see `startup/`), and everything is chunked
+section-by-section by the same `MarkdownIndexer`.
 
-- **`cv.md`** — the CV (`CvIngestionRunner`).
+- **`cv.md`** — the CV (`CvDocumentSource`).
 - **GitHub projects** — the user's own (non-fork, described) repositories, fetched
   live from the GitHub API with their real language breakdown as the tech stack
-  (`GitHubIngestionRunner` → `GitHubProjectsSource`). Configure under `app.github`
-  (`enabled`, `user`, optional `token`). A GitHub failure is logged and skipped —
-  the CV bot still works.
+  (`GitHubProjectsSource`). Configure under `app.github` (`enabled`, `user`,
+  optional `token`); a GitHub failure is logged and skipped — the CV bot still works.
 
 So the bot answers about the CV *and* the projects ("what tech stack does
 cv-rag-bot use?", "what projects has Ege built?").
