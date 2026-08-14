@@ -18,6 +18,7 @@ public final class RagBotConstants {
     public static final String ASK_PATH = "/ask";
     public static final String AGENT_ASK_PATH = "/agent/ask";
     public static final String REINDEX_PATH = "/reindex";
+    public static final String QA_STATS_PATH = "/qa/stats";
     public static final String HEALTH_PATH = "/health";
     public static final String STATUS_UP = "UP";
 

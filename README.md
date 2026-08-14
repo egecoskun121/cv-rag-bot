@@ -122,6 +122,27 @@ The event carries only the source *name*, so the consumer re-fetches fresh conte
 if it keeps failing, parked in the DLT while the other sources still index. Run it
 with Kafka up (`docker compose up -d kafka`) and `--app.ingestion.mode=kafka`.
 
+### Q&A observability (event stream)
+
+Where the Kafka ingestion pipeline is the *write* side, this is the *read* side made
+observable. With `app.qa.events.enabled=true`, every `/ask` publishes a `QaEvent`
+(question, retrieved sections, best similarity score, answer, latency) to a
+`qa-events` topic — off the request path, so answering is unaffected. A consumer
+folds events into in-memory stats, exposed at `GET /api/v1/qa/stats`:
+
+```bash
+curl http://localhost:8081/api/v1/qa/stats
+# {"totalQuestions":3,"weakRetrievals":0,"avgLatencyMs":8668.3,
+#  "topSections":{"Languages":3,"Education":3,"Certificates":2, …}}
+```
+
+`weakRetrievals` counts answers whose best score fell below
+`app.qa.weak-score-threshold` — a proxy for "probably couldn't ground this". Note
+the threshold needs tuning per corpus: with a one-page CV and a generous top-K, even
+an off-topic question finds a nearest neighbour above 0.5, so the default rarely
+fires. The publisher is optional (`ObjectProvider`), so with the feature off the RAG
+service emits nothing.
+
 ## Agentic RAG (alternative endpoint)
 
 `POST /api/v1/ask` runs a **fixed** pipeline (always embed → search → answer).
