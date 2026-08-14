@@ -1,5 +1,6 @@
 package com.ege.cvrag.medium;
 
+import com.ege.cvrag.markdown.MarkdownSectionBuilder;
 import com.ege.cvrag.model.medium.MediumItem;
 import org.jsoup.Jsoup;
 
@@ -20,20 +21,19 @@ public final class MediumPostFormatter {
     }
 
     public static String format(MediumItem item) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("## Blog: ").append(item.getTitle()).append('\n');
-        sb.append(plainText(item.getContent())).append("\n\n");
-        if (Objects.nonNull(item.getPubDate())) {
-            sb.append("- Published: ").append(datePart(item.getPubDate())).append('\n');
-        }
-        if (Objects.nonNull(item.getLink())) {
-            sb.append("- Link: ").append(item.getLink()).append('\n');
-        }
-        return sb.toString().strip();
+        return MarkdownSectionBuilder.heading("Blog", item.getTitle())
+                .body(plainText(item.getContent()))
+                .field("Published", publishedDate(item.getPubDate()))
+                .field("Link", item.getLink())
+                .build();
     }
 
     private static String plainText(String html) {
         return Objects.isNull(html) ? "" : Jsoup.parse(html).text();
+    }
+
+    private static String publishedDate(String pubDate) {
+        return Objects.isNull(pubDate) ? null : datePart(pubDate);
     }
 
     /** Medium's pubDate is RFC-1123, e.g. "Fri, 14 Aug 2026 12:00:00 GMT" -> "2026-08-14". */

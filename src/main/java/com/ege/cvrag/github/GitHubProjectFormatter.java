@@ -1,5 +1,6 @@
 package com.ege.cvrag.github;
 
+import com.ege.cvrag.markdown.MarkdownSectionBuilder;
 import com.ege.cvrag.model.github.GitHubRepo;
 
 import java.util.Map;
@@ -17,24 +18,18 @@ public final class GitHubProjectFormatter {
     }
 
     public static String format(GitHubRepo repo, Map<String, Long> languages) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("## Project: ").append(repo.name()).append('\n');
-        sb.append(repo.description()).append("\n\n");
-
         String stack = techStack(languages, repo.language());
-        if (!stack.isBlank()) {
-            sb.append("- Tech stack: ").append(stack).append('\n');
-        }
-        if (Objects.nonNull(repo.topics()) && !repo.topics().isEmpty()) {
-            sb.append("- Topics: ").append(String.join(", ", repo.topics())).append('\n');
-        }
-        if (Objects.nonNull(repo.htmlUrl())) {
-            sb.append("- Repository: ").append(repo.htmlUrl()).append('\n');
-        }
-        if (Objects.nonNull(repo.pushedAt())) {
-            sb.append("- Last updated: ").append(datePart(repo.pushedAt())).append('\n');
-        }
-        return sb.toString().strip();
+        String topics = Objects.isNull(repo.topics()) || repo.topics().isEmpty()
+                ? null : String.join(", ", repo.topics());
+        String lastUpdated = Objects.isNull(repo.pushedAt()) ? null : datePart(repo.pushedAt());
+
+        return MarkdownSectionBuilder.heading("Project", repo.name())
+                .body(repo.description())
+                .field("Tech stack", stack)
+                .field("Topics", topics)
+                .field("Repository", repo.htmlUrl())
+                .field("Last updated", lastUpdated)
+                .build();
     }
 
     /** Language breakdown as "Java 94%, HTML 6%", ordered by share; falls back to the primary language. */

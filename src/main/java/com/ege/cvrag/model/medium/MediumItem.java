@@ -2,6 +2,8 @@ package com.ege.cvrag.model.medium;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * One {@code <item>} in a Medium RSS feed. A plain class rather than a record —
@@ -10,6 +12,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
  * record's canonical constructor.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
 public class MediumItem {
 
     @JacksonXmlProperty(localName = "title")
@@ -24,36 +28,4 @@ public class MediumItem {
     /** Full HTML article body — Medium's free RSS includes it, not just a summary. */
     @JacksonXmlProperty(localName = "encoded")
     private String content;
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getLink() {
-        return link;
-    }
-
-    public void setLink(String link) {
-        this.link = link;
-    }
-
-    public String getPubDate() {
-        return pubDate;
-    }
-
-    public void setPubDate(String pubDate) {
-        this.pubDate = pubDate;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
 }
