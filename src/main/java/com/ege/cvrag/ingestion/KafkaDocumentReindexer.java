@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -47,8 +48,21 @@ public class KafkaDocumentReindexer implements DocumentReindexer {
         this.reloadOnStartup = reloadOnStartup;
     }
 
+    /**
+     * Evicts every cache before publishing the reindex events — same
+     * {@code beforeInvocation = true} reasoning as {@link SyncDocumentReindexer}:
+     * stale entries must be gone before anything re-fetches, not after (see that
+     * class's javadoc for the bug this avoids). The async consumer will then
+     * repopulate GitHub/Medium caches with fresh data as it processes each event.
+     */
     @Override
     @RunOnStartup
+    @CacheEvict(value = {
+            RagBotConstants.CACHE_GITHUB_REPOS,
+            RagBotConstants.CACHE_GITHUB_LANGUAGES,
+            RagBotConstants.CACHE_MEDIUM_FEED,
+            RagBotConstants.CACHE_ASK_ANSWERS
+    }, allEntries = true, beforeInvocation = true)
     public IngestionSummary reindex() {
         if (reloadOnStartup) {
             int deleted = vectorStore.deleteAll();
