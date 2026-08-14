@@ -1,7 +1,10 @@
 package com.ege.cvrag.github;
 
+import com.ege.cvrag.markdown.DocumentFormatter;
 import com.ege.cvrag.markdown.MarkdownSectionBuilder;
+import com.ege.cvrag.model.github.GitHubProjectView;
 import com.ege.cvrag.model.github.GitHubRepo;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Objects;
@@ -11,14 +14,13 @@ import java.util.stream.Collectors;
  * Formats a GitHub repository (plus its language breakdown) into a Markdown
  * section that the RAG pipeline can index. Pure — no I/O — so it is easy to test.
  */
-public final class GitHubProjectFormatter {
+@Component
+public class GitHubProjectFormatter implements DocumentFormatter<GitHubProjectView> {
 
-    private GitHubProjectFormatter() {
-        // utility class
-    }
-
-    public static String format(GitHubRepo repo, Map<String, Long> languages) {
-        String stack = techStack(languages, repo.language());
+    @Override
+    public String format(GitHubProjectView view) {
+        GitHubRepo repo = view.repo();
+        String stack = techStack(view.languages(), repo.language());
         String topics = Objects.isNull(repo.topics()) || repo.topics().isEmpty()
                 ? null : String.join(", ", repo.topics());
         String lastUpdated = Objects.isNull(repo.pushedAt()) ? null : datePart(repo.pushedAt());

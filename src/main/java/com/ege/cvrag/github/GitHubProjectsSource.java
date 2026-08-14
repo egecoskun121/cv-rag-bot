@@ -1,6 +1,8 @@
 package com.ege.cvrag.github;
 
 import com.ege.cvrag.ingestion.DocumentSource;
+import com.ege.cvrag.markdown.DocumentFormatter;
+import com.ege.cvrag.model.github.GitHubProjectView;
 import com.ege.cvrag.model.github.GitHubRepo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,10 +24,13 @@ import java.util.stream.Collectors;
 public class GitHubProjectsSource implements DocumentSource {
 
     private final GitHubApi gitHubApi;
+    private final DocumentFormatter<GitHubProjectView> formatter;
     private final String user;
 
-    public GitHubProjectsSource(GitHubApi gitHubApi, @Value("${app.github.user}") String user) {
+    public GitHubProjectsSource(GitHubApi gitHubApi, DocumentFormatter<GitHubProjectView> formatter,
+                                @Value("${app.github.user}") String user) {
         this.gitHubApi = gitHubApi;
+        this.formatter = formatter;
         this.user = user;
     }
 
@@ -38,7 +43,7 @@ public class GitHubProjectsSource implements DocumentSource {
     public String markdown() {
         return gitHubApi.listRepos(user).stream()
                 .filter(this::isRealProject)
-                .map(repo -> GitHubProjectFormatter.format(repo, gitHubApi.languages(user, repo.name())))
+                .map(repo -> formatter.format(new GitHubProjectView(repo, gitHubApi.languages(user, repo.name()))))
                 .collect(Collectors.joining("\n\n"));
     }
 

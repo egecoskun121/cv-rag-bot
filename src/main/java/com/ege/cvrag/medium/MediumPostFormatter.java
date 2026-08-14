@@ -1,8 +1,10 @@
 package com.ege.cvrag.medium;
 
+import com.ege.cvrag.markdown.DocumentFormatter;
 import com.ege.cvrag.markdown.MarkdownSectionBuilder;
 import com.ege.cvrag.model.medium.MediumItem;
 import org.jsoup.Jsoup;
+import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,13 +16,11 @@ import java.util.Objects;
  * Pure — no I/O — so it is easy to test. Strips the article's HTML down to plain
  * text with Jsoup; raw tags would just add noise to the embedding.
  */
-public final class MediumPostFormatter {
+@Component
+public class MediumPostFormatter implements DocumentFormatter<MediumItem> {
 
-    private MediumPostFormatter() {
-        // utility class
-    }
-
-    public static String format(MediumItem item) {
+    @Override
+    public String format(MediumItem item) {
         return MarkdownSectionBuilder.heading("Blog", item.getTitle())
                 .body(plainText(item.getContent()))
                 .field("Published", publishedDate(item.getPubDate()))

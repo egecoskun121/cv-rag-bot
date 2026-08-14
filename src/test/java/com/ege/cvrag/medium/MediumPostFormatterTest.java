@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class MediumPostFormatterTest {
 
+    private final MediumPostFormatter formatter = new MediumPostFormatter();
+
     @Test
     void formatsPostAsMarkdownWithPlainTextBody() {
         MediumItem item = new MediumItem();
@@ -15,7 +17,7 @@ class MediumPostFormatterTest {
         item.setPubDate("Fri, 14 Aug 2026 12:00:00 GMT");
         item.setLink("https://medium.com/@egecoskun/building-a-rag-bot-abc123");
 
-        String md = MediumPostFormatter.format(item);
+        String md = formatter.format(item);
 
         assertThat(md).startsWith("## Blog: Building a RAG Bot From Scratch");
         assertThat(md).contains("Full article body here.");   // HTML tags stripped
@@ -30,7 +32,7 @@ class MediumPostFormatterTest {
         item.setTitle("Draft Thoughts");
         item.setContent(null);
 
-        String md = MediumPostFormatter.format(item);
+        String md = formatter.format(item);
 
         assertThat(md).isEqualTo("## Blog: Draft Thoughts");
     }
@@ -41,6 +43,6 @@ class MediumPostFormatterTest {
         item.setTitle("Post");
         item.setPubDate("not-a-date");
 
-        assertThat(MediumPostFormatter.format(item)).contains("- Published: not-a-date");
+        assertThat(formatter.format(item)).contains("- Published: not-a-date");
     }
 }

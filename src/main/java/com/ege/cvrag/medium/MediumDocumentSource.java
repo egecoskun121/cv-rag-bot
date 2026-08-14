@@ -1,6 +1,8 @@
 package com.ege.cvrag.medium;
 
 import com.ege.cvrag.ingestion.DocumentSource;
+import com.ege.cvrag.markdown.DocumentFormatter;
+import com.ege.cvrag.model.medium.MediumItem;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
@@ -21,12 +23,15 @@ public class MediumDocumentSource implements DocumentSource {
 
     private final MediumApi mediumApi;
     private final MediumFeedParser parser;
+    private final DocumentFormatter<MediumItem> formatter;
     private final String handle;
 
     public MediumDocumentSource(MediumApi mediumApi, MediumFeedParser parser,
+                                DocumentFormatter<MediumItem> formatter,
                                 @Value("${app.medium.username}") String handle) {
         this.mediumApi = mediumApi;
         this.parser = parser;
+        this.formatter = formatter;
         this.handle = handle;
     }
 
@@ -38,7 +43,7 @@ public class MediumDocumentSource implements DocumentSource {
     @Override
     public String markdown() {
         return parser.parse(mediumApi.fetchFeed(handle)).stream()
-                .map(MediumPostFormatter::format)
+                .map(formatter::format)
                 .collect(Collectors.joining("\n\n"));
     }
 }

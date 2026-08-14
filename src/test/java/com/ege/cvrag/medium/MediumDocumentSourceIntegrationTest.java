@@ -56,7 +56,7 @@ class MediumDocumentSourceIntegrationTest {
 
         MediumDocumentSource source = new MediumDocumentSource(
                 mediumApiFor("http://localhost:" + server.getAddress().getPort()),
-                new MediumFeedParser(), "@egecoskun");
+                new MediumFeedParser(), new MediumPostFormatter(), "@egecoskun");
 
         String markdown = source.markdown();
 
@@ -72,7 +72,7 @@ class MediumDocumentSourceIntegrationTest {
 
         MediumDocumentSource source = new MediumDocumentSource(
                 mediumApiFor("http://localhost:" + server.getAddress().getPort()),
-                new MediumFeedParser(), "@egecoskun");
+                new MediumFeedParser(), new MediumPostFormatter(), "@egecoskun");
 
         assertThat(source.markdown()).isEmpty();
     }

@@ -1,5 +1,6 @@
 package com.ege.cvrag.github;
 
+import com.ege.cvrag.model.github.GitHubProjectView;
 import com.ege.cvrag.model.github.GitHubRepo;
 import org.junit.jupiter.api.Test;
 
@@ -10,13 +11,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class GitHubProjectFormatterTest {
 
+    private final GitHubProjectFormatter formatter = new GitHubProjectFormatter();
+
     @Test
     void formatsRepoAsMarkdownSectionWithTechStack() {
         GitHubRepo repo = new GitHubRepo(
                 "cv-rag-bot", "Local RAG over a CV", "Java", false,
                 List.of("java", "rag"), "https://github.com/x/cv-rag-bot", "2026-08-13T20:27:04Z");
 
-        String md = GitHubProjectFormatter.format(repo, Map.of("Java", 9000L, "HTML", 1000L));
+        String md = formatter.format(new GitHubProjectView(repo, Map.of("Java", 9000L, "HTML", 1000L)));
 
         assertThat(md).startsWith("## Project: cv-rag-bot");
         assertThat(md).contains("Local RAG over a CV");
