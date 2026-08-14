@@ -1,6 +1,10 @@
 package com.ege.cvrag.github;
 
+import com.ege.cvrag.markdown.DocumentFormatter;
+import com.ege.cvrag.markdown.MarkdownSectionBuilder;
+import com.ege.cvrag.model.github.GitHubProjectView;
 import com.ege.cvrag.model.github.GitHubRepo;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Objects;
@@ -10,31 +14,24 @@ import java.util.stream.Collectors;
  * Formats a GitHub repository (plus its language breakdown) into a Markdown
  * section that the RAG pipeline can index. Pure — no I/O — so it is easy to test.
  */
-public final class GitHubProjectFormatter {
+@Component
+public class GitHubProjectFormatter implements DocumentFormatter<GitHubProjectView> {
 
-    private GitHubProjectFormatter() {
-        // utility class
-    }
+    @Override
+    public String format(GitHubProjectView view) {
+        GitHubRepo repo = view.repo();
+        String stack = techStack(view.languages(), repo.language());
+        String topics = Objects.isNull(repo.topics()) || repo.topics().isEmpty()
+                ? null : String.join(", ", repo.topics());
+        String lastUpdated = Objects.isNull(repo.pushedAt()) ? null : datePart(repo.pushedAt());
 
-    public static String format(GitHubRepo repo, Map<String, Long> languages) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("## Project: ").append(repo.name()).append('\n');
-        sb.append(repo.description()).append("\n\n");
-
-        String stack = techStack(languages, repo.language());
-        if (!stack.isBlank()) {
-            sb.append("- Tech stack: ").append(stack).append('\n');
-        }
-        if (Objects.nonNull(repo.topics()) && !repo.topics().isEmpty()) {
-            sb.append("- Topics: ").append(String.join(", ", repo.topics())).append('\n');
-        }
-        if (Objects.nonNull(repo.htmlUrl())) {
-            sb.append("- Repository: ").append(repo.htmlUrl()).append('\n');
-        }
-        if (Objects.nonNull(repo.pushedAt())) {
-            sb.append("- Last updated: ").append(datePart(repo.pushedAt())).append('\n');
-        }
-        return sb.toString().strip();
+        return MarkdownSectionBuilder.heading("Project", repo.name())
+                .body(repo.description())
+                .field("Tech stack", stack)
+                .field("Topics", topics)
+                .field("Repository", repo.htmlUrl())
+                .field("Last updated", lastUpdated)
+                .build();
     }
 
     /** Language breakdown as "Java 94%, HTML 6%", ordered by share; falls back to the primary language. */

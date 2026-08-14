@@ -91,6 +91,10 @@ app:
     user: egecoskun121
     base-url: https://api.github.com
     token: ""                       # optional PAT; empty = unauthenticated (60 req/hr)
+  medium:
+    enabled: true
+    username: "@egecoskun"          # empty feed is fine — indexes 0 chunks, no error
+    base-url: https://medium.com/feed
 
 logging:
   level:

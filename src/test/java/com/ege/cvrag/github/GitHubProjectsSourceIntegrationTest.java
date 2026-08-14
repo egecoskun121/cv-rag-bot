@@ -49,7 +49,8 @@ class GitHubProjectsSourceIntegrationTest {
         server.start();
 
         GitHubProjectsSource source = new GitHubProjectsSource(
-                gitHubApiFor("http://localhost:" + server.getAddress().getPort()), "testuser");
+                gitHubApiFor("http://localhost:" + server.getAddress().getPort()),
+                new GitHubProjectFormatter(), "testuser");
 
         String markdown = source.markdown();
 

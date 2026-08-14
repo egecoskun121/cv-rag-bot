@@ -89,6 +89,9 @@ the orchestrator (Open/Closed).
 - **GitHub projects** — the user's own repos via the GitHub API, tech stack from
   real language breakdown. Configure under `app.github`; a failure is skipped, not
   fatal.
+- **Medium posts** — the user's public RSS feed (`app.medium.{enabled,username}`).
+  HTML content is stripped to plain text with Jsoup before indexing. An empty feed
+  indexes 0 chunks, no error — posts appear on the next re-index once published.
 
 **Re-index without a restart:**
 
