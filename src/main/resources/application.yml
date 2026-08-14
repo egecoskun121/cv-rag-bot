@@ -5,10 +5,14 @@ spring:
   application:
     name: cv-rag-bot
 
+  # Local Docker Postgres by default; override with env vars to point at RDS (or
+  # anywhere else) without touching this file — e.g.
+  #   export DB_URL=jdbc:postgresql://<rds-endpoint>:5432/ragdb?sslmode=require
+  #   export DB_USERNAME=ragadmin DB_PASSWORD=***
   datasource:
-    url: jdbc:postgresql://localhost:5433/ragdb
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/ragdb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
 
   # Only used when app.ingestion.mode=kafka (see below). Harmless in sync mode:
   # no listeners start and the producer is never called, so no broker connection.
