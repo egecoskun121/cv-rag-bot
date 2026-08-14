@@ -13,8 +13,13 @@ import org.springframework.web.service.annotation.HttpExchange;
 @HttpExchange
 public interface MediumApi {
 
-    /** Raw RSS/XML for a profile, e.g. handle {@code @egecoskun}. */
-    @Cacheable(value = RagBotConstants.CACHE_MEDIUM_FEED, key = "#handle")
+    /**
+     * Raw RSS/XML for a profile, e.g. handle {@code @egecoskun}. {@code unless}
+     * skips caching a blank response so a transient empty reply doesn't lock in
+     * "no posts" for a full TTL.
+     */
+    @Cacheable(value = RagBotConstants.CACHE_MEDIUM_FEED, key = "#handle",
+            unless = "#result == null || #result.isBlank()")
     @GetExchange("/{handle}")
     String fetchFeed(@PathVariable String handle);
 }

@@ -19,13 +19,20 @@ import java.util.Map;
 @HttpExchange
 public interface GitHubApi {
 
-    /** Public repositories owned by the user. */
-    @Cacheable(value = RagBotConstants.CACHE_GITHUB_REPOS, key = "#user")
+    /**
+     * Public repositories owned by the user. {@code unless} skips caching an empty
+     * result — GitHub can return zero repos on a transient hiccup without erroring
+     * (no exception to trip the "never cache a failure" default), and we don't
+     * want that to lock in "no projects" for a full TTL.
+     */
+    @Cacheable(value = RagBotConstants.CACHE_GITHUB_REPOS, key = "#user",
+            unless = "#result == null || #result.isEmpty()")
     @GetExchange("/users/{user}/repos?per_page=100&type=owner&sort=pushed")
     List<GitHubRepo> listRepos(@PathVariable String user);
 
     /** Language byte-breakdown for a repository, e.g. {@code {"Java": 45000, "HTML": 3000}}. */
-    @Cacheable(value = RagBotConstants.CACHE_GITHUB_LANGUAGES, key = "#owner + ':' + #repo")
+    @Cacheable(value = RagBotConstants.CACHE_GITHUB_LANGUAGES, key = "#owner + ':' + #repo",
+            unless = "#result == null || #result.isEmpty()")
     @GetExchange("/repos/{owner}/{repo}/languages")
     Map<String, Long> languages(@PathVariable String owner, @PathVariable String repo);
 }
