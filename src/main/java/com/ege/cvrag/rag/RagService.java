@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -50,6 +51,12 @@ public class RagService {
         this.topK = topK;
     }
 
+    /**
+     * {@code @Cacheable} is inert unless {@code app.cache.enabled=true}. When
+     * enabled, a cache hit skips the whole pipeline — including the Q&A event
+     * publish, so a repeated question won't double-count in {@code /qa/stats}.
+     */
+    @Cacheable(value = RagBotConstants.CACHE_ASK_ANSWERS, key = "#question.toLowerCase().trim()")
     public String ask(String question) {
         log.info("Answering question via RAG (topK={}): {}", topK, question);
         long start = System.currentTimeMillis();

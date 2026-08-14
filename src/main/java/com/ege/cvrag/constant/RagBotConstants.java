@@ -31,6 +31,12 @@ public final class RagBotConstants {
     public static final String INGEST_MODE_SYNC = "sync";
     public static final String INGEST_MODE_KAFKA = "kafka";
 
+    // --- Redis cache names (app.cache.enabled) ---
+    public static final String CACHE_GITHUB_REPOS = "githubRepos";
+    public static final String CACHE_GITHUB_LANGUAGES = "githubLanguages";
+    public static final String CACHE_MEDIUM_FEED = "mediumFeed";
+    public static final String CACHE_ASK_ANSWERS = "askAnswers";
+
     // --- Agentic RAG ---
     public static final String ROLE_TOOL = "tool";
     public static final String SEARCH_CV_TOOL = "search_cv";

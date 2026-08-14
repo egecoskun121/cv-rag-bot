@@ -74,6 +74,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Redis caching (app.cache.enabled=true); provides spring-context's cache abstraction too -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- Medium RSS feed source: XML parsing + HTML-to-text for article content -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
