@@ -23,7 +23,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: com.ege.cvrag.model.ingestion
+        spring.json.trusted.packages: com.ege.cvrag.model.ingestion,com.ege.cvrag.model.qa
 
 # Application config for the hand-rolled RAG pipeline.
 app:
@@ -56,6 +56,14 @@ app:
   agent:
     max-iterations: 5   # safety cap on the agent tool-use loop
     top-k: 5            # chunks the search_cv tool returns per call
+  qa:
+    # Q&A event stream (observability). When enabled, each /ask publishes a QaEvent
+    # to Kafka and a consumer aggregates stats (GET /api/v1/qa/stats). Off by
+    # default: no publisher bean, so the RAG path emits nothing. Needs Kafka up.
+    events:
+      enabled: false
+    topic: qa-events
+    weak-score-threshold: 0.5   # topScore below this counts as a weak retrieval
   docs:
     # Where the CV Markdown comes from: `classpath` (bundled cv.md) or `s3`.
     # Only one CvDocumentSource / S3DocumentSource is wired in (@ConditionalOnProperty).
