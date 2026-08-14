@@ -55,8 +55,15 @@ public class RagService {
      * {@code @Cacheable} is inert unless {@code app.cache.enabled=true}. When
      * enabled, a cache hit skips the whole pipeline — including the Q&A event
      * publish, so a repeated question won't double-count in {@code /qa/stats}.
+     *
+     * {@code condition} skips caching trivially short input (not worth a slot);
+     * {@code sync} means concurrent requests for the same question share one LLM
+     * call instead of each triggering their own (cache-stampede protection). Note:
+     * {@code sync} and {@code unless} can't be combined — Spring's sync path
+     * doesn't support a post-invocation "don't cache this" decision.
      */
-    @Cacheable(value = RagBotConstants.CACHE_ASK_ANSWERS, key = "#question.toLowerCase().trim()")
+    @Cacheable(value = RagBotConstants.CACHE_ASK_ANSWERS, key = "#question.toLowerCase().trim()",
+            condition = "#question.length() > 3", sync = true)
     public String ask(String question) {
         log.info("Answering question via RAG (topK={}): {}", topK, question);
         long start = System.currentTimeMillis();
