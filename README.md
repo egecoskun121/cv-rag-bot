@@ -128,6 +128,14 @@ curl http://localhost:8081/api/v1/qa/stats
 `weakRetrievals` = answers below `app.qa.weak-score-threshold` (needs tuning per
 corpus). Off by default — no Kafka dependency when disabled.
 
+### Caching (Redis)
+
+`app.cache.enabled=true` turns on `@Cacheable` for GitHub API calls, the Medium
+feed fetch, and `/ask` answers (keyed by question). Off by default — no
+`CacheManager` bean, so the annotations are inert. Local Redis
+(`docker compose up -d redis`) or `REDIS_HOST`/`REDIS_PORT` for AWS ElastiCache.
+TTLs: `app.cache.{github,medium,ask}-ttl-minutes`.
+
 ## Agentic RAG (alternative endpoint)
 
 `POST /api/v1/ask` runs a fixed pipeline. `POST /api/v1/agent/ask` runs an agent

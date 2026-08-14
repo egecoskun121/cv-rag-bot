@@ -29,6 +29,19 @@ spring:
       properties:
         spring.json.trusted.packages: com.ege.cvrag.model.ingestion,com.ege.cvrag.model.qa
 
+  # Belt-and-suspenders default: no caching unless app.cache.enabled=true builds its
+  # own RedisCacheManager (see CacheConfig). Prevents Boot's own cache
+  # auto-configuration from ever reaching for Redis on its own.
+  cache:
+    type: none
+
+  # Only used when app.cache.enabled=true. Local Docker Redis by default; override
+  # to point at AWS ElastiCache the same way DB_URL points RDS.
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
 # Application config for the hand-rolled RAG pipeline.
 app:
   ollama:
@@ -68,6 +81,14 @@ app:
       enabled: false
     topic: qa-events
     weak-score-threshold: 0.5   # topScore below this counts as a weak retrieval
+  cache:
+    # Redis-backed @Cacheable. Off by default — no CacheManager bean, so @Cacheable
+    # annotations are inert and no Redis connection is attempted. Run with local
+    # Redis (docker compose up -d redis) or point at ElastiCache via REDIS_HOST.
+    enabled: false
+    github-ttl-minutes: 60   # repo list + language breakdown (also avoids rate limits)
+    medium-ttl-minutes: 60   # RSS feed fetch
+    ask-ttl-minutes: 10      # /ask answers, keyed by question
   docs:
     # Where the CV Markdown comes from: `classpath` (bundled cv.md) or `s3`.
     # Only one CvDocumentSource / S3DocumentSource is wired in (@ConditionalOnProperty).
