@@ -66,11 +66,32 @@ Key settings live in `src/main/resources/application.yml` under `app.*`:
 chat/embedding models, `top-k`, and embedding dimensions. Replace
 `src/main/resources/docs/cv.md` with your own CV; it is re-indexed on each startup.
 
+### Database: local Docker or AWS RDS
+
+`spring.datasource.{url,username,password}` read from `DB_URL` / `DB_USERNAME` /
+`DB_PASSWORD` env vars, defaulting to the local Docker Postgres
+(`docker-compose up -d postgres`). Point at an RDS instance instead without
+touching the file:
+
+```bash
+export DB_URL="jdbc:postgresql://<rds-endpoint>:5432/ragdb?sslmode=require"
+export DB_USERNAME=ragadmin
+export DB_PASSWORD="***"
+./mvnw spring-boot:run
+```
+
+`PgVectorStore` creates the `vector` extension, table and HNSW index itself
+(`@PostConstruct`) — RDS Postgres 15.2+ ships pgvector, so no manual schema setup is
+needed beyond `CREATE EXTENSION vector` (already covered by that init step; if your
+IAM role can't `CREATE EXTENSION`, run it once as the master user). Restrict the
+instance's security group to your IP; don't make it publicly open.
+
 ## Data sources
 
 Ingestion is source-pluggable. Each source implements `DocumentSource`
-(`markdown()`), and `DocumentIngestion` gets them all injected as a
-`List<DocumentSource>` — so **adding a source never changes the orchestrator**,
+(`markdown()`), and the active `DocumentReindexer` (sync or Kafka — see below) gets
+them all injected as a `List<DocumentSource>` — so **adding a source never changes
+the orchestrator**,
 you just add a `@Component` (Open/Closed). It runs at startup via a custom
 `@RunOnStartup` annotation (see `startup/`), and everything is chunked
 section-by-section by the same `MarkdownIndexer`.
