@@ -14,7 +14,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class DocumentIngestionTest {
+class SyncDocumentReindexerTest {
 
     /** A trivial source; a null markdown makes {@code markdown()} throw to test skipping. */
     private record FakeSource(String name, String markdown) implements DocumentSource {
@@ -34,7 +34,7 @@ class DocumentIngestionTest {
         when(indexer.index("cv")).thenReturn(14);
         when(indexer.index("gh")).thenReturn(20);
 
-        DocumentIngestion ingestion = new DocumentIngestion(
+        SyncDocumentReindexer ingestion = new SyncDocumentReindexer(
                 List.of(new FakeSource("CV", "cv"), new FakeSource("GitHub", "gh")),
                 indexer, store, true);
 
@@ -53,7 +53,7 @@ class DocumentIngestionTest {
         PgVectorStore store = mock(PgVectorStore.class);
         when(indexer.index("cv")).thenReturn(14);
 
-        DocumentIngestion ingestion = new DocumentIngestion(
+        SyncDocumentReindexer ingestion = new SyncDocumentReindexer(
                 List.of(new FakeSource("CV", "cv"), new FakeSource("Broken", null)),
                 indexer, store, true);
 
@@ -70,7 +70,7 @@ class DocumentIngestionTest {
         PgVectorStore store = mock(PgVectorStore.class);
         when(indexer.index(anyString())).thenReturn(1);
 
-        new DocumentIngestion(List.of(new FakeSource("CV", "cv")), indexer, store, false)
+        new SyncDocumentReindexer(List.of(new FakeSource("CV", "cv")), indexer, store, false)
                 .reindex();
 
         verify(store, never()).deleteAll();

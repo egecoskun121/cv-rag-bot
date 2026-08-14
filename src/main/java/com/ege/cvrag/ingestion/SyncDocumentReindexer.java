@@ -8,40 +8,39 @@ import com.ege.cvrag.vectorstore.PgVectorStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
- * Indexes every {@link DocumentSource} into the vector store.
- *
- * Spring injects all {@code DocumentSource} beans (ordered by {@code @Order}), so
- * adding a source never changes this class. {@link #reindex()} clears the store
- * (when enabled) then indexes each source independently — a failing source is
- * logged and skipped so the rest still make it in. It runs once at startup via
- * {@code @RunOnStartup}, and again on demand from {@code POST /api/v1/reindex}
- * (update the CV in S3 → re-index without a restart).
+ * Default (in-process) reindexer: clears the store then indexes each source
+ * inline, on the calling thread. A failing source is logged and skipped so the
+ * rest still make it in. Active unless {@code app.ingestion.mode=kafka}.
  */
 @Component
-public class DocumentIngestion {
+@ConditionalOnProperty(prefix = "app.ingestion", name = "mode",
+        havingValue = RagBotConstants.INGEST_MODE_SYNC, matchIfMissing = true)
+public class SyncDocumentReindexer implements DocumentReindexer {
 
-    private static final Logger log = LoggerFactory.getLogger(DocumentIngestion.class);
+    private static final Logger log = LoggerFactory.getLogger(SyncDocumentReindexer.class);
 
     private final List<DocumentSource> sources;
     private final MarkdownIndexer indexer;
     private final PgVectorStore vectorStore;
     private final boolean reloadOnStartup;
 
-    public DocumentIngestion(List<DocumentSource> sources,
-                             MarkdownIndexer indexer,
-                             PgVectorStore vectorStore,
-                             @Value("${app.ingestion.reload-on-startup:true}") boolean reloadOnStartup) {
+    public SyncDocumentReindexer(List<DocumentSource> sources,
+                                 MarkdownIndexer indexer,
+                                 PgVectorStore vectorStore,
+                                 @Value("${app.ingestion.reload-on-startup:true}") boolean reloadOnStartup) {
         this.sources = sources;
         this.indexer = indexer;
         this.vectorStore = vectorStore;
         this.reloadOnStartup = reloadOnStartup;
     }
 
+    @Override
     @RunOnStartup
     public IngestionSummary reindex() {
         if (reloadOnStartup) {

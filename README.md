@@ -98,6 +98,30 @@ curl -X POST http://localhost:8081/api/v1/reindex
 # {"totalChunks":34,"sources":[{"source":"CV (s3://…/cv.md)","chunks":14,"status":"indexed"}, …]}
 ```
 
+### Ingestion mode: sync or Kafka
+
+`app.ingestion.mode` picks how sources are indexed, behind the `DocumentReindexer`
+interface (the callers — startup hook and `/reindex` — don't change):
+
+- **`sync`** (default) — `SyncDocumentReindexer` indexes each source inline, on the
+  calling thread. Zero infrastructure; a failing source is logged and skipped.
+- **`kafka`** — `KafkaDocumentReindexer` publishes one event per source and returns
+  immediately; a consumer indexes them asynchronously, with retry and a
+  dead-letter topic:
+
+```
+reindex()/startup ──▶ topic: document-ingest-requests ──▶ IngestionEventConsumer
+   (publish per source)                                     fetch markdown → embed → pgvector
+                                                                    │ fails N retries
+                                                                    ▼
+                                                   document-ingest-requests.DLT (parked)
+```
+
+The event carries only the source *name*, so the consumer re-fetches fresh content
+— a transient failure (e.g. a GitHub rate limit) is retried against live data and,
+if it keeps failing, parked in the DLT while the other sources still index. Run it
+with Kafka up (`docker compose up -d kafka`) and `--app.ingestion.mode=kafka`.
+
 ## Agentic RAG (alternative endpoint)
 
 `POST /api/v1/ask` runs a **fixed** pipeline (always embed → search → answer).

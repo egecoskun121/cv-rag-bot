@@ -61,9 +61,22 @@
             <artifactId>s3</artifactId>
         </dependency>
 
+        <!-- Kafka — optional event-driven ingestion pipeline (app.ingestion.mode=kafka) -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- In-JVM Kafka broker for CI-safe event-flow tests (no Docker needed) -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
