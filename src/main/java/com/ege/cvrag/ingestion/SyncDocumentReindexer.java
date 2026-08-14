@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -40,8 +41,24 @@ public class SyncDocumentReindexer implements DocumentReindexer {
         this.reloadOnStartup = reloadOnStartup;
     }
 
+    /**
+     * Evicts every cache (GitHub, Medium, cached answers) before reindexing runs.
+     * {@code beforeInvocation = true} is required here, not the default: the body
+     * below itself calls the {@code @Cacheable} GitHub/Medium clients, so evicting
+     * *after* would either (a) immediately wipe the fresh entries this same call
+     * just wrote, or worse (b) if a stale entry already existed, the reindex's own
+     * "fetch fresh data" call would return that stale cached value instead of
+     * hitting the real API — reindexing wouldn't actually refresh anything.
+     * Inert unless {@code app.cache.enabled=true} (see {@link com.ege.cvrag.cache.CacheConfig}).
+     */
     @Override
     @RunOnStartup
+    @CacheEvict(value = {
+            RagBotConstants.CACHE_GITHUB_REPOS,
+            RagBotConstants.CACHE_GITHUB_LANGUAGES,
+            RagBotConstants.CACHE_MEDIUM_FEED,
+            RagBotConstants.CACHE_ASK_ANSWERS
+    }, allEntries = true, beforeInvocation = true)
     public IngestionSummary reindex() {
         if (reloadOnStartup) {
             int deleted = vectorStore.deleteAll();
