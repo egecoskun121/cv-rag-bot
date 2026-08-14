@@ -9,10 +9,13 @@ one:
    `@Getter @Setter` only when the mapping needs mutable fields (e.g. XML binding).
 2. **Client** — `<domain>/<Domain>Api.java`, a `@HttpExchange` interface. Build it in
    `config/<Domain>ClientConfig.java` (`RestClient` + `HttpServiceProxyFactory`).
-3. **Formatter** — `<domain>/<Domain>PostFormatter.java` (or similar), a pure static
-   class. Build the Markdown with `markdown.MarkdownSectionBuilder`
-   (`heading().body().field()...build()`) so every source renders consistently.
-4. **Source** — `<domain>/<Domain>DocumentSource.java`, implements `DocumentSource`:
+3. **Formatter** — `<domain>/<Domain>Formatter.java`, a `@Component` implementing
+   `markdown.DocumentFormatter<T>` (`T` = the domain type, or a small record if the
+   input has more than one part, e.g. `GitHubProjectView`). Build the Markdown with
+   `markdown.MarkdownSectionBuilder` (`heading().body().field()...build()`) so
+   every source renders consistently.
+4. **Source** — `<domain>/<Domain>DocumentSource.java`, implements `DocumentSource`,
+   with the formatter injected (not called statically):
    ```java
    @Component
    @Order(N)   // next free slot
