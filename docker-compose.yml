@@ -44,5 +44,23 @@ services:
     ports:
       - "6379:6379"
 
+  # Only needed when app.qa.events.enabled=true; validates/stores the QaEvent JSON
+  # Schema. Reuses the same Postgres server as pgvector — separate "apicurio" DB
+  # (create it once: docker exec cv-rag-pgvector psql -U postgres -c "CREATE DATABASE apicurio").
+  apicurio-registry:
+    image: apicurio/apicurio-registry:3.3.1
+    container_name: cv-rag-apicurio
+    ports:
+      - "8085:8080"
+    environment:
+      APICURIO_STORAGE_KIND: sql
+      APICURIO_STORAGE_SQL_KIND: postgresql
+      APICURIO_DATASOURCE_URL: jdbc:postgresql://postgres:5432/apicurio
+      APICURIO_DATASOURCE_USERNAME: postgres
+      APICURIO_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:

@@ -67,6 +67,13 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Apicurio schema registry client (QaEvent JSON Schema validation, app.qa.events.enabled) -->
+        <dependency>
+            <groupId>io.apicurio</groupId>
+            <artifactId>apicurio-registry-jsonschema-serde-kafka</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+
         <!-- Lombok — compile-time only; version managed by spring-boot-starter-parent -->
         <dependency>
             <groupId>org.projectlombok</groupId>

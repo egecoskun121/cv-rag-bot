@@ -26,7 +26,7 @@ public class QaEventConsumer {
         this.stats = stats;
     }
 
-    @KafkaListener(topics = "${app.qa.topic}")
+    @KafkaListener(topics = "${app.qa.topic}", containerFactory = "qaEventListenerContainerFactory")
     public void onQaEvent(QaEvent event) {
         stats.record(event);
         if (stats.isWeak(event.topScore())) {

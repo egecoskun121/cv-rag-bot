@@ -5,6 +5,7 @@ import com.ege.cvrag.model.qa.QaEvent;
 import com.ege.cvrag.qa.QaStatsAggregator;
 import com.ege.cvrag.vectorstore.PgVectorStore;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -17,10 +18,15 @@ import static org.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * End-to-end Q&A event flow over an in-JVM Kafka broker (no Docker). Publishes a
- * {@link QaEvent} and asserts the consumer folds it into {@link QaStatsAggregator}.
- * The vector store and indexer are mocked so no Postgres/Ollama is needed in CI.
+ * End-to-end Q&A event flow. Publishes a {@link QaEvent} and asserts the consumer
+ * folds it into {@link QaStatsAggregator}. Since
+ * {@link com.ege.cvrag.kafka.QaEventSchemaConfig} routes QaEvent through Apicurio's
+ * JSON Schema serde, this now needs a real schema registry reachable (the in-JVM
+ * Kafka broker alone isn't enough) — so, like the eval harness, it's off by default
+ * and run locally: {@code docker compose up -d kafka apicurio-registry &&
+ * mvn test -DschemaRegistry=true -Dtest=QaEventFlowIntegrationTest}
  */
+@EnabledIfSystemProperty(named = "schemaRegistry", matches = "true")
 @SpringBootTest(properties = {
         "app.qa.events.enabled=true",
         "app.github.enabled=false",

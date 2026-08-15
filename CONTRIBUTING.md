@@ -36,6 +36,30 @@ one:
 
 Existing examples to copy from: `github/` (REST/JSON) and `medium/` (RSS/XML).
 
+## Apicurio schema registry (QaEvent, app.qa.events.enabled)
+
+`QaEvent` is validated against a JSON Schema (`src/main/resources/schemas/qa-event.json`)
+in Apicurio instead of plain JSON — see `QaEventSchemaConfig`. **Gotcha:** the first
+time you point a fresh app at a fresh registry, auto-register's "does this artifact
+already exist?" check can throw (`ProblemDetails: null`) — Apicurio 3.3.1 returns 404s
+as `Content-Type: application/json`, not `application/problem+json`, and the Java SDK's
+error parser only handles the latter. Workaround: pre-register the schema once before
+the app's first publish:
+
+```bash
+curl -X POST http://localhost:8085/apis/registry/v3/groups/cv-rag-bot/artifacts \
+  -H "Content-Type: application/json" \
+  -d "{\"artifactId\":\"qa-event\",\"artifactType\":\"JSON\",\"firstVersion\":{\"content\":{\"content\":$(python3 -c 'import json;print(json.dumps(open("src/main/resources/schemas/qa-event.json").read()))'),\"contentType\":\"application/json\"}}}"
+```
+
+After that, auto-register only hits the (working) "create new version" path. Also set
+a compatibility rule once, so incompatible changes are rejected:
+
+```bash
+curl -X POST http://localhost:8085/apis/registry/v3/groups/cv-rag-bot/artifacts/qa-event/rules \
+  -H "Content-Type: application/json" -d '{"ruleType":"COMPATIBILITY","config":"BACKWARD"}'
+```
+
 ## Conventions
 
 - `Objects.isNull(x)` / `Objects.nonNull(x)`, not `== null` / `!= null`.
