@@ -37,6 +37,13 @@ public final class RagBotConstants {
     public static final String CACHE_MEDIUM_FEED = "mediumFeed";
     public static final String CACHE_ASK_ANSWERS = "askAnswers";
 
+    // --- QaEvent's dedicated (schema-registry-aware) Kafka consumer ---
+    public static final String QA_EVENTS_CONSUMER_GROUP = "cv-rag-qa-events";
+
+    // --- Apicurio schema registry coordinates for QaEvent ---
+    public static final String QA_EVENT_SCHEMA_GROUP = "cv-rag-bot";
+    public static final String QA_EVENT_SCHEMA_ARTIFACT_ID = "qa-event";
+
     // --- Agentic RAG ---
     public static final String ROLE_TOOL = "tool";
     public static final String SEARCH_CV_TOOL = "search_cv";

@@ -128,6 +128,12 @@ curl http://localhost:8081/api/v1/qa/stats
 `weakRetrievals` = answers below `app.qa.weak-score-threshold` (needs tuning per
 corpus). Off by default — no Kafka dependency when disabled.
 
+`QaEvent` is validated against a JSON Schema in **Apicurio Registry**
+(`docker compose up -d apicurio-registry`, SQL storage on the same Postgres as
+pgvector) instead of plain JSON. A compatible change (e.g. a new optional field)
+is accepted; an incompatible one (e.g. a new *required* field) is rejected at
+publish time — see `CONTRIBUTING.md` for setup and a one-time gotcha.
+
 ### Caching (Redis)
 
 `app.cache.enabled=true` turns on `@Cacheable` for GitHub API calls, the Medium

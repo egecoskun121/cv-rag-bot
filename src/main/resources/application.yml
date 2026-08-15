@@ -81,6 +81,10 @@ app:
       enabled: false
     topic: qa-events
     weak-score-threshold: 0.5   # topScore below this counts as a weak retrieval
+    # When events are enabled, QaEvent is also validated against a JSON Schema
+    # registered here (Apicurio) instead of plain JSON — auto-registers the first
+    # time, then rejects an incompatible change at publish time (see CONTRIBUTING.md).
+    schema-registry-url: http://localhost:8085/apis/registry/v3
   cache:
     # Redis-backed @Cacheable. Off by default — no CacheManager bean, so @Cacheable
     # annotations are inert and no Redis connection is attempted. Run with local
