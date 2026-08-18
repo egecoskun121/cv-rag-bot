@@ -47,7 +47,7 @@ public class OllamaClient {
         this.api = api;
     }
 
-    /** Embeds a single piece of text into a vector (768 floats for nomic-embed-text). */
+    /** Embeds a single piece of text into a vector (1024 floats for bge-m3). */
     public float[] embed(String text) {
         OllamaEmbeddingResponse response =
                 guardedCall(() -> api.embed(new OllamaEmbeddingRequest(embedModel, text)));

@@ -47,7 +47,7 @@ app:
   ollama:
     base-url: http://localhost:11434
     chat-model: qwen2.5:7b          # pull: `ollama pull qwen2.5:7b`
-    embed-model: nomic-embed-text   # pull: `ollama pull nomic-embed-text`
+    embed-model: bge-m3             # pull: `ollama pull bge-m3` (multilingual — see app.rag below)
     temperature: 0.0                # deterministic answers over a fixed CV
     read-timeout-seconds: 120       # LLM generation can take a while locally
     retry:
@@ -58,14 +58,12 @@ app:
       failure-threshold: 3          # consecutive failed operations before the circuit opens
       open-wait-ms: 5000            # how long to stay OPEN before a half-open trial
   rag:
-    # A one-page CV fits entirely in the LLM context, so we retrieve generously.
-    # With English-centric nomic-embed-text, a Turkish query can rank the one
-    # chunk holding a fact (e.g. Profile's "4 years") LAST — a small top-K would
-    # silently drop it. Top-K filtering earns its keep at scale (many documents),
-    # not for a single page. See README for the multilingual-embeddings follow-up
-    # that makes selective (low top-K) retrieval reliable on Turkish queries.
-    top-k: 20
-    embedding-dimensions: 768       # MUST match the embed model's output size
+    # bge-m3 is multilingual, so a Turkish query ranks the right chunk near the top
+    # instead of last (nomic-embed-text was English-centric and needed top-k=20 to
+    # avoid silently dropping the answer). Verified via the eval harness — see
+    # README's "Evaluation" section for the before/after numbers.
+    top-k: 8
+    embedding-dimensions: 1024      # MUST match the embed model's output size (bge-m3 = 1024)
   eval:
     # Smaller k for the evaluation harness so Recall@k / MRR discriminate
     # (production top-k=20 covers the whole CV, making recall trivially 1.0).

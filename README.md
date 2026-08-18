@@ -76,6 +76,11 @@ export DB_PASSWORD="***"
 `PgVectorStore` creates the extension/table/index itself on first connect (RDS
 Postgres 15.2+ ships pgvector). Restrict the RDS security group to your IP.
 
+**Changing `app.rag.embedding-dimensions`** (e.g. switching embed models): the
+table isn't auto-migrated (`CREATE TABLE IF NOT EXISTS` only creates it once), so
+drop it first — `DROP TABLE cv_chunk;` — then restart; it's recreated with the new
+`vector(N)` size on the next boot.
+
 ## Data sources
 
 Each source implements `DocumentSource`; the active `DocumentReindexer` (sync or
@@ -163,13 +168,17 @@ the full run needs a live stack:
 mvn test -Deval=true -Dtest=RagEvaluationHarnessTest
 ```
 
-Writes `target/eval-report.md`.
+Writes `target/eval-report.md`. Used to quantify the `nomic-embed-text` → `bge-m3`
+switch below: Recall@5 0.75→0.88, keyword coverage 0.75→0.88, MRR 0.54→0.40 (more
+hits, but ranked slightly lower on average within top-5 — an honest trade-off, not
+a strict win).
 
 ## Notes
 
-- `top-k` is high because a one-page CV fits the whole context window;
-  `nomic-embed-text` is English-centric, so a multilingual model (`bge-m3`) would
-  let a lower `top-k` work reliably.
+- Embeddings are `bge-m3` (1024-dim, multilingual) — it ranks a Turkish query's
+  answer chunk near the top instead of last, so `top-k` stays at **8** instead of
+  the 20 `nomic-embed-text` needed to avoid silently dropping it. Verified live:
+  "Ege kaç yıl deneyime sahip?" now resolves correctly at top-k=8.
 - `app.ingestion.reload-on-startup` wipes and re-embeds every boot; disable for a
   persistent store.
 
